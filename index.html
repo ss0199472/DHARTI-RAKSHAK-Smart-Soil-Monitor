@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DHARTI-RAKSHAK | Smart Soil Monitoring Dashboard</title>
+  <title>DHARTI-RAKSHAK | Smart Soil Monitoring System</title>
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,37 +33,37 @@
         </div>
       </div>
 
-      <nav class="sidebar-nav">
-        <a href="#dashboard" class="nav-item active">
+      <nav class="sidebar-nav" id="sidebarNav">
+        <a href="#dashboard" class="nav-item active" data-tab="dashboard">
           <i class="fa-solid fa-table-cells-large"></i>
           <span>Dashboard</span>
         </a>
-        <a href="#realtime" class="nav-item">
+        <a href="#realtime" class="nav-item" data-tab="realtime">
           <i class="fa-solid fa-tower-broadcast"></i>
           <span>Realtime Data</span>
         </a>
-        <a href="#sensors" class="nav-item">
+        <a href="#sensors" class="nav-item" data-tab="sensors">
           <i class="fa-solid fa-microchip"></i>
-          <span>Sensors</span>
+          <span>Sensors (7-in-1)</span>
         </a>
-        <a href="#analytics" class="nav-item">
+        <a href="#analytics" class="nav-item" data-tab="analytics">
           <i class="fa-solid fa-chart-line"></i>
           <span>Charts & Analytics</span>
         </a>
-        <a href="#alerts" class="nav-item">
+        <a href="#alerts" class="nav-item" data-tab="alerts">
           <i class="fa-solid fa-bell"></i>
           <span>Alerts</span>
           <span class="badge-pill" id="alertsCountBadge">0</span>
         </a>
-        <a href="#device" class="nav-item">
+        <a href="#device" class="nav-item" data-tab="device">
           <i class="fa-solid fa-server"></i>
           <span>Device Status</span>
         </a>
-        <a href="#logs" class="nav-item">
+        <a href="#logs" class="nav-item" data-tab="logs">
           <i class="fa-solid fa-file-waveform"></i>
           <span>Data Logs</span>
         </a>
-        <a href="#settings" class="nav-item">
+        <a href="#settings" class="nav-item" data-tab="settings">
           <i class="fa-solid fa-gear"></i>
           <span>Settings</span>
         </a>
@@ -73,7 +73,7 @@
       <div class="system-status-card">
         <div class="status-title">System Status</div>
         <div class="status-indicator" id="sidebarStatusIndicator">
-          <span class="pulse-dot-indicator" id="sidebarDot"></span>
+          <span class="pulse-dot-red" id="sidebarDot"></span>
           <span id="sidebarStatusText">Awaiting Device</span>
         </div>
         <div class="status-meta">
@@ -87,7 +87,7 @@
           </div>
           <div class="meta-row">
             <span>Sync Engine</span>
-            <strong class="text-amber" id="sidebarSyncStatus">Connecting...</strong>
+            <strong class="text-muted" id="sidebarSyncStatus">Connecting...</strong>
           </div>
         </div>
       </div>
@@ -98,7 +98,7 @@
       </div>
     </aside>
 
-    <!-- MAIN CONTENT AREA -->
+    <!-- MAIN CONTENT WRAPPER -->
     <div class="main-wrapper">
       
       <!-- TOP HEADER BAR -->
@@ -108,14 +108,14 @@
             <i class="fa-solid fa-bars"></i>
           </button>
           <div class="header-title-box">
-            <h1>DHARTI-RAKSHAK</h1>
-            <p>Smart Soil Monitoring Dashboard 🌱</p>
+            <h1 id="currentTabHeading">Dashboard</h1>
+            <p id="currentTabSub">DHARTI-RAKSHAK Smart Telemetry 🌱</p>
           </div>
         </div>
 
         <div class="header-right">
           <!-- Radar Radar Pulse Animation -->
-          <div class="radar-box" id="radarBox" title="Telemetry Antenna Status">
+          <div class="radar-box offline" id="radarBox" title="Telemetry Antenna Status">
             <div class="radar-sweep" id="radarSweep"></div>
             <div class="radar-dot" id="radarDot"></div>
           </div>
@@ -153,420 +153,634 @@
         </div>
       </header>
 
-      <!-- DASHBOARD MAIN BODY -->
-      <main class="dashboard-body">
+      <!-- TAB VIEW CONTAINERS -->
+      <div class="tabs-container">
         
-        <!-- SECTION TITLE & CONTROLS -->
-        <div class="section-toolbar">
-          <div class="section-title-box">
-            <div class="pulse-icon">
-              <i class="fa-solid fa-chart-simple"></i>
+        <!-- =================================================================
+             1. DASHBOARD TAB VIEW
+             ================================================================= -->
+        <div class="tab-view active" id="tab-dashboard">
+          
+          <div class="section-toolbar">
+            <div class="section-title-box">
+              <div class="pulse-icon"><i class="fa-solid fa-chart-simple"></i></div>
+              <div>
+                <h2>Sensor Telemetry</h2>
+                <p>Realtime overview of soil parameters</p>
+              </div>
             </div>
-            <div>
-              <h2>Sensor Telemetry</h2>
-              <p>Realtime overview of soil parameters</p>
+            <div class="toolbar-actions">
+              <div class="last-updated-tag">
+                <i class="fa-regular fa-clock"></i> Last Sample: <span id="lastUpdatedVal" class="text-mono text-muted">Awaiting ESP32</span>
+              </div>
             </div>
           </div>
 
-          <div class="toolbar-actions">
-            <div class="last-updated-tag">
-              <i class="fa-regular fa-clock"></i>
-              Last Sample: <span id="lastUpdatedVal" class="text-mono text-muted">Awaiting ESP32</span>
+          <!-- 7 NEON GLASSMORPHIC SENSOR CARDS -->
+          <section class="sensor-cards-grid">
+            
+            <!-- 1. Soil Moisture -->
+            <div class="neon-card card-moisture">
+              <div class="card-top">
+                <div class="param-info">
+                  <div class="param-icon"><i class="fa-solid fa-droplet"></i></div>
+                  <div><h3>Soil Moisture</h3><span>Volumetric Water Content</span></div>
+                </div>
+              </div>
+              <div class="card-center">
+                <div class="radial-gauge">
+                  <svg viewBox="0 0 120 120" class="gauge-svg">
+                    <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
+                    <circle cx="60" cy="60" r="50" class="gauge-glow" id="circleMoisture" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                  </svg>
+                  <div class="gauge-value-content">
+                    <span class="value-number" id="valMoisture">--</span>
+                    <span class="value-unit">%</span>
+                    <span class="value-sub">VWC</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-bottom">
+                <div class="stat-pill text-cyan"><i class="fa-solid fa-water"></i> <span id="hintMoisture">Awaiting Data</span></div>
+              </div>
             </div>
-            <div class="auto-refresh-pill">
-              <span>Auto Sync</span>
-              <label class="toggle-switch">
-                <input type="checkbox" checked id="autoRefreshToggle">
-                <span class="slider"></span>
-              </label>
-              <span class="status-label text-green" id="syncToggleLabel">LIVE</span>
+
+            <!-- 2. Soil Temperature -->
+            <div class="neon-card card-temp">
+              <div class="card-top">
+                <div class="param-info">
+                  <div class="param-icon"><i class="fa-solid fa-temperature-half"></i></div>
+                  <div><h3>Temperature</h3><span>Soil Temperature</span></div>
+                </div>
+              </div>
+              <div class="card-center">
+                <div class="radial-gauge">
+                  <svg viewBox="0 0 120 120" class="gauge-svg">
+                    <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
+                    <circle cx="60" cy="60" r="50" class="gauge-glow" id="circleTemp" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                  </svg>
+                  <div class="gauge-value-content">
+                    <span class="value-number" id="valTemp">--</span>
+                    <span class="value-unit">°C</span>
+                    <span class="value-sub">Soil Temp</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-bottom">
+                <div class="stat-pill text-amber"><i class="fa-solid fa-thermometer"></i> <span id="hintTemp">Awaiting Data</span></div>
+              </div>
+            </div>
+
+            <!-- 3. Electrical Conductivity (EC) -->
+            <div class="neon-card card-ec">
+              <div class="card-top">
+                <div class="param-info">
+                  <div class="param-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
+                  <div><h3>Conductivity (EC)</h3><span>Salinity & Nutrients</span></div>
+                </div>
+              </div>
+              <div class="card-center">
+                <div class="radial-gauge">
+                  <svg viewBox="0 0 120 120" class="gauge-svg">
+                    <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
+                    <circle cx="60" cy="60" r="50" class="gauge-glow" id="circleEc" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                  </svg>
+                  <div class="gauge-value-content">
+                    <span class="value-number" id="valEc">--</span>
+                    <span class="value-unit">µS/cm</span>
+                    <span class="value-sub">Salinity</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-bottom">
+                <div class="stat-pill text-emerald"><i class="fa-solid fa-bolt"></i> <span id="hintEc">Awaiting Data</span></div>
+              </div>
+            </div>
+
+            <!-- 4. Soil pH -->
+            <div class="neon-card card-ph">
+              <div class="card-top">
+                <div class="param-info">
+                  <div class="param-icon"><i class="fa-solid fa-flask-vial"></i></div>
+                  <div><h3>pH Level</h3><span>Soil Acidity / Alkalinity</span></div>
+                </div>
+              </div>
+              <div class="card-center">
+                <div class="radial-gauge">
+                  <svg viewBox="0 0 120 120" class="gauge-svg">
+                    <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
+                    <circle cx="60" cy="60" r="50" class="gauge-glow" id="circlePh" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                  </svg>
+                  <div class="gauge-value-content">
+                    <span class="value-number" id="valPh">--</span>
+                    <span class="value-unit">pH</span>
+                    <span class="value-sub" id="phNatureLabel">--</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-bottom">
+                <div class="stat-pill text-rose"><i class="fa-solid fa-flask"></i> <span id="hintPh">Awaiting Data</span></div>
+              </div>
+            </div>
+
+            <!-- 5. Nitrogen (N) -->
+            <div class="neon-card card-nitrogen">
+              <div class="card-top">
+                <div class="param-info">
+                  <div class="param-icon"><i class="fa-solid fa-leaf"></i></div>
+                  <div><h3>Nitrogen (N)</h3><span>Available Nitrogen</span></div>
+                </div>
+              </div>
+              <div class="card-center">
+                <div class="radial-gauge">
+                  <svg viewBox="0 0 120 120" class="gauge-svg">
+                    <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
+                    <circle cx="60" cy="60" r="50" class="gauge-glow" id="circleN" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                  </svg>
+                  <div class="gauge-value-content">
+                    <span class="value-number" id="valNitrogen">--</span>
+                    <span class="value-unit">mg/kg</span>
+                    <span class="value-sub">Leaf Vitality</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-bottom">
+                <div class="stat-pill text-emerald"><i class="fa-solid fa-seedling"></i> <span id="hintN">Awaiting Data</span></div>
+              </div>
+            </div>
+
+            <!-- 6. Phosphorus (P) -->
+            <div class="neon-card card-phosphorus">
+              <div class="card-top">
+                <div class="param-info">
+                  <div class="param-icon"><i class="fa-solid fa-atom"></i></div>
+                  <div><h3>Phosphorus (P)</h3><span>Available Phosphorus</span></div>
+                </div>
+              </div>
+              <div class="card-center">
+                <div class="radial-gauge">
+                  <svg viewBox="0 0 120 120" class="gauge-svg">
+                    <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
+                    <circle cx="60" cy="60" r="50" class="gauge-glow" id="circleP" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                  </svg>
+                  <div class="gauge-value-content">
+                    <span class="value-number" id="valPhosphorus">--</span>
+                    <span class="value-unit">mg/kg</span>
+                    <span class="value-sub">Root Vitality</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-bottom">
+                <div class="stat-pill text-cyan"><i class="fa-solid fa-spa"></i> <span id="hintP">Awaiting Data</span></div>
+              </div>
+            </div>
+
+            <!-- 7. Potassium (K) -->
+            <div class="neon-card card-potassium">
+              <div class="card-top">
+                <div class="param-info">
+                  <div class="param-icon"><i class="fa-solid fa-spa"></i></div>
+                  <div><h3>Potassium (K)</h3><span>Available Potassium</span></div>
+                </div>
+              </div>
+              <div class="card-center">
+                <div class="radial-gauge">
+                  <svg viewBox="0 0 120 120" class="gauge-svg">
+                    <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
+                    <circle cx="60" cy="60" r="50" class="gauge-glow" id="circleK" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                  </svg>
+                  <div class="gauge-value-content">
+                    <span class="value-number" id="valPotassium">--</span>
+                    <span class="value-unit">mg/kg</span>
+                    <span class="value-sub">Immunity</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-bottom">
+                <div class="stat-pill text-magenta"><i class="fa-solid fa-shield-halved"></i> <span id="hintK">Awaiting Data</span></div>
+              </div>
+            </div>
+
+          </section>
+
+          <!-- MIDDLE ROW: DUAL-AXIS TRENDS, NPK LEVELS, & SOIL HEALTH -->
+          <section class="analytics-row">
+            
+            <!-- Soil Moisture & Temperature Trend -->
+            <div class="analytics-panel trend-panel">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <i class="fa-solid fa-chart-line text-cyan"></i>
+                  <h3>Soil Moisture & Temperature Trend</h3>
+                </div>
+                <div class="panel-controls">
+                  <div class="legend-pills">
+                    <span class="legend-item"><span class="legend-dot moisture-dot"></span> Moisture (%)</span>
+                    <span class="legend-item"><span class="legend-dot temp-dot"></span> Temp (°C)</span>
+                  </div>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="trendChart"></canvas>
+                <div class="chart-empty-overlay" id="trendEmptyState">
+                  <i class="fa-solid fa-satellite-dish fa-bounce"></i>
+                  <span>Awaiting telemetry from ESP32 node...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- NPK Levels Bar Chart -->
+            <div class="analytics-panel npk-panel">
+              <div class="panel-header">
+                <div class="panel-title">
+                  <i class="fa-solid fa-chart-simple text-cyan"></i>
+                  <h3>NPK Levels (mg/kg)</h3>
+                </div>
+                <div class="panel-controls"><span class="live-tag"><i class="fa-solid fa-circle"></i> Live</span></div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="npkChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Soil Health Index & Alerts Column -->
+            <div class="health-alerts-col">
+              
+              <!-- Soil Health Card -->
+              <div class="analytics-panel health-card">
+                <div class="panel-title">
+                  <i class="fa-solid fa-heart-pulse text-emerald"></i>
+                  <h3>Soil Health Index</h3>
+                </div>
+                <div class="health-content">
+                  <div class="health-circle">
+                    <svg viewBox="0 0 100 100" class="health-svg">
+                      <circle cx="50" cy="50" r="42" class="gauge-track"></circle>
+                      <circle cx="50" cy="50" r="42" class="health-fill" id="healthCircle" stroke-dasharray="264" stroke-dashoffset="264"></circle>
+                    </svg>
+                    <div class="health-number">
+                      <span id="healthScore">--</span>
+                      <small id="healthScoreSub">Awaiting</small>
+                    </div>
+                  </div>
+                  <div class="health-details">
+                    <div class="health-status-badge">
+                      <span class="label">Overall Status</span>
+                      <strong class="text-muted" id="healthStatusText">Awaiting Data</strong>
+                    </div>
+                    <p class="health-tip" id="healthTipText">Connect ESP32 sensor node to calculate live soil fertility score.</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Alerts & Notifications Card -->
+              <div class="analytics-panel alerts-card">
+                <div class="panel-header">
+                  <div class="panel-title">
+                    <i class="fa-solid fa-bell text-emerald"></i>
+                    <h3>Alerts & Telemetry Feed</h3>
+                  </div>
+                </div>
+                <div class="alerts-list" id="alertsContainer">
+                  <div class="alert-item">
+                    <i class="fa-solid fa-circle-notch fa-spin text-amber"></i>
+                    <div class="alert-body"><span>Waiting for initial sensor transmission...</span></div>
+                    <span class="alert-time">--:--</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </section>
+
+        </div>
+
+        <!-- =================================================================
+             2. REALTIME DATA STREAM VIEW
+             ================================================================= -->
+        <div class="tab-view" id="tab-realtime">
+          <div class="view-header-banner">
+            <h2><i class="fa-solid fa-tower-broadcast text-cyan"></i> Live Telemetry Data Stream</h2>
+            <p>High-frequency sensor stream directly decoded from RS485 Modbus packet frames</p>
+          </div>
+
+          <div class="realtime-stream-grid">
+            <div class="stream-card">
+              <h3><i class="fa-solid fa-terminal text-green"></i> Live Packet Feed</h3>
+              <div class="terminal-box" id="livePacketTerminal">
+                <div class="term-line text-muted">[SYSTEM] Initializing RS485 Modbus telemetry stream listener...</div>
+                <div class="term-line text-muted">[FIREBASE] Connected to Realtime Database endpoint.</div>
+                <div class="term-line text-amber">[ESP32] Listening for incoming telemetry packets...</div>
+              </div>
+            </div>
+
+            <div class="stream-card">
+              <h3><i class="fa-solid fa-table-list text-cyan"></i> Modbus Register Map View</h3>
+              <table class="stream-table">
+                <thead>
+                  <tr><th>Param</th><th>Address</th><th>Raw Register</th><th>Decoded Value</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Moisture</td><td><code>0x0012</code></td><td id="rawMoist">--</td><td id="decMoist">-- %</td><td><span class="pill-badge">Holding</span></td></tr>
+                  <tr><td>Temperature</td><td><code>0x0013</code></td><td id="rawTemp">--</td><td id="decTemp">-- °C</td><td><span class="pill-badge">Holding</span></td></tr>
+                  <tr><td>EC Salinity</td><td><code>0x0015</code></td><td id="rawEc">--</td><td id="decEc">-- µS/cm</td><td><span class="pill-badge">Holding</span></td></tr>
+                  <tr><td>Soil pH</td><td><code>0x0006</code></td><td id="rawPh">--</td><td id="decPh">-- pH</td><td><span class="pill-badge">Holding</span></td></tr>
+                  <tr><td>Nitrogen</td><td><code>0x001E</code></td><td id="rawN">--</td><td id="decN">-- mg/kg</td><td><span class="pill-badge">Holding</span></td></tr>
+                  <tr><td>Phosphorus</td><td><code>0x001F</code></td><td id="rawP">--</td><td id="decP">-- mg/kg</td><td><span class="pill-badge">Holding</span></td></tr>
+                  <tr><td>Potassium</td><td><code>0x0020</code></td><td id="rawK">--</td><td id="decK">-- mg/kg</td><td><span class="pill-badge">Holding</span></td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
 
-        <!-- 7 NEON GLASSMORPHIC SENSOR CARDS -->
-        <section class="sensor-cards-grid">
-          
-          <!-- 1. Soil Moisture -->
-          <div class="neon-card card-moisture">
-            <div class="card-top">
-              <div class="param-info">
-                <div class="param-icon"><i class="fa-solid fa-droplet"></i></div>
-                <div>
-                  <h3>Soil Moisture</h3>
-                  <span>Volumetric Water Content</span>
-                </div>
-              </div>
-              <button class="card-opt-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+        <!-- =================================================================
+             3. SENSORS (7-in-1 DETAILED BREAKDOWN)
+             ================================================================= -->
+        <div class="tab-view" id="tab-sensors">
+          <div class="view-header-banner">
+            <h2><i class="fa-solid fa-microchip text-green"></i> 7-in-1 Soil Sensor Specifications & Diagnostics</h2>
+            <p>Industrial RS485 Modbus RTU Multi-Parameter Probe Health and Safety Ranges</p>
+          </div>
+
+          <div class="sensor-specs-grid">
+            <div class="spec-card">
+              <div class="spec-header"><i class="fa-solid fa-droplet text-cyan"></i> <h4>Volumetric Moisture</h4></div>
+              <p>Range: 0.0 - 100.0% VWC</p>
+              <div class="safe-range-bar"><div class="safe-zone" style="left:30%; width:40%;"></div></div>
+              <span class="safe-label">Optimal Agricultural Range: 30% - 70%</span>
             </div>
-            
-            <div class="card-center">
-              <div class="radial-gauge">
-                <svg viewBox="0 0 120 120" class="gauge-svg">
-                  <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
-                  <circle cx="60" cy="60" r="50" class="gauge-glow" id="circleMoisture" stroke-dasharray="314" stroke-dashoffset="314"></circle>
-                </svg>
-                <div class="gauge-value-content">
-                  <span class="value-number" id="valMoisture">--</span>
-                  <span class="value-unit">%</span>
-                  <span class="value-sub">VWC</span>
-                </div>
+
+            <div class="spec-card">
+              <div class="spec-header"><i class="fa-solid fa-temperature-half text-amber"></i> <h4>Soil Temperature</h4></div>
+              <p>Range: -40.0°C to +85.0°C</p>
+              <div class="safe-range-bar"><div class="safe-zone" style="left:35%; width:30%;"></div></div>
+              <span class="safe-label">Optimal Root Range: 18°C - 32°C</span>
+            </div>
+
+            <div class="spec-card">
+              <div class="spec-header"><i class="fa-solid fa-bolt text-emerald"></i> <h4>Electrical Conductivity</h4></div>
+              <p>Range: 0 - 20000 µS/cm</p>
+              <div class="safe-range-bar"><div class="safe-zone" style="left:10%; width:35%;"></div></div>
+              <span class="safe-label">Optimal Fertigation: 800 - 2500 µS/cm</span>
+            </div>
+
+            <div class="spec-card">
+              <div class="spec-header"><i class="fa-solid fa-flask-vial text-rose"></i> <h4>Soil pH</h4></div>
+              <p>Range: 0.00 - 14.00 pH</p>
+              <div class="safe-range-bar"><div class="safe-zone" style="left:40%; width:20%;"></div></div>
+              <span class="safe-label">Optimal Nutrient Uptake: 6.0 - 7.5 pH</span>
+            </div>
+
+            <div class="spec-card">
+              <div class="spec-header"><i class="fa-solid fa-leaf text-green"></i> <h4>Nitrogen (N)</h4></div>
+              <p>Range: 0 - 2000 mg/kg</p>
+              <div class="safe-range-bar"><div class="safe-zone" style="left:20%; width:40%;"></div></div>
+              <span class="safe-label">Essential for vegetative canopy</span>
+            </div>
+
+            <div class="spec-card">
+              <div class="spec-header"><i class="fa-solid fa-atom text-cyan"></i> <h4>Phosphorus (P)</h4></div>
+              <p>Range: 0 - 2000 mg/kg</p>
+              <div class="safe-range-bar"><div class="safe-zone" style="left:15%; width:30%;"></div></div>
+              <span class="safe-label">Essential for root & flower vigor</span>
+            </div>
+
+            <div class="spec-card">
+              <div class="spec-header"><i class="fa-solid fa-spa text-magenta"></i> <h4>Potassium (K)</h4></div>
+              <p>Range: 0 - 2000 mg/kg</p>
+              <div class="safe-range-bar"><div class="safe-zone" style="left:25%; width:45%;"></div></div>
+              <span class="safe-label">Essential for crop immunity</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- =================================================================
+             4. CHARTS & ANALYTICS
+             ================================================================= -->
+        <div class="tab-view" id="tab-analytics">
+          <div class="view-header-banner">
+            <h2><i class="fa-solid fa-chart-line text-cyan"></i> Telemetry Analytics Studio</h2>
+            <p>Historical time-series trend visualizer with multi-parameter overlays</p>
+          </div>
+
+          <div class="analytics-studio-card">
+            <div class="studio-header">
+              <div class="param-checkboxes">
+                <label><input type="checkbox" checked id="chkMoist"> Moisture</label>
+                <label><input type="checkbox" checked id="chkTemp"> Temp</label>
+                <label><input type="checkbox" checked id="chkEc"> EC</label>
+                <label><input type="checkbox" checked id="chkPh"> pH</label>
+                <label><input type="checkbox" id="chkN"> Nitrogen</label>
+                <label><input type="checkbox" id="chkP"> Phosphorus</label>
+                <label><input type="checkbox" id="chkK"> Potassium</label>
+              </div>
+              <button class="btn-export" id="btnExportCsv"><i class="fa-solid fa-download"></i> Export CSV</button>
+            </div>
+            <div class="chart-wrapper-large">
+              <canvas id="analyticsStudioChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- =================================================================
+             5. ALERTS & NOTIFICATIONS
+             ================================================================= -->
+        <div class="tab-view" id="tab-alerts">
+          <div class="view-header-banner">
+            <h2><i class="fa-solid fa-bell text-amber"></i> Telemetry Incident & Alert Center</h2>
+            <p>Threshold anomaly detection and system heartbeat alerts</p>
+          </div>
+
+          <div class="alerts-tab-grid">
+            <div class="alert-box-card">
+              <h3>Active Alarms</h3>
+              <div class="alarms-list" id="activeAlarmsList">
+                <div class="empty-notice">No active critical threshold violations detected.</div>
               </div>
             </div>
 
-            <div class="card-bottom">
-              <div class="stat-pill text-cyan">
-                <i class="fa-solid fa-water"></i>
-                <span id="hintMoisture">No Data</span>
+            <div class="alert-box-card">
+              <h3>Threshold Rules Config</h3>
+              <div class="rules-list">
+                <div class="rule-row"><span>Moisture Critical Low:</span> <strong>&lt; 20.0%</strong></div>
+                <div class="rule-row"><span>Moisture Critical High:</span> <strong>&gt; 80.0%</strong></div>
+                <div class="rule-row"><span>pH Acidic Warning:</span> <strong>&lt; 5.50 pH</strong></div>
+                <div class="rule-row"><span>pH Alkaline Warning:</span> <strong>&gt; 8.00 pH</strong></div>
+                <div class="rule-row"><span>EC Excessive Salinity:</span> <strong>&gt; 3500 µS/cm</strong></div>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- 2. Soil Temperature -->
-          <div class="neon-card card-temp">
-            <div class="card-top">
-              <div class="param-info">
-                <div class="param-icon"><i class="fa-solid fa-temperature-half"></i></div>
-                <div>
-                  <h3>Temperature</h3>
-                  <span>Soil Temperature</span>
-                </div>
-              </div>
-              <button class="card-opt-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-            </div>
-            
-            <div class="card-center">
-              <div class="radial-gauge">
-                <svg viewBox="0 0 120 120" class="gauge-svg">
-                  <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
-                  <circle cx="60" cy="60" r="50" class="gauge-glow" id="circleTemp" stroke-dasharray="314" stroke-dashoffset="314"></circle>
-                </svg>
-                <div class="gauge-value-content">
-                  <span class="value-number" id="valTemp">--</span>
-                  <span class="value-unit">°C</span>
-                  <span class="value-sub">Soil Temp</span>
-                </div>
+        <!-- =================================================================
+             6. DEVICE STATUS CONSOLE
+             ================================================================= -->
+        <div class="tab-view" id="tab-device">
+          <div class="view-header-banner">
+            <h2><i class="fa-solid fa-server text-cyan"></i> ESP32 Controller Hardware Diagnostics</h2>
+            <p>Firmware telemetry, RS485 communication bus health, and RF signal stats</p>
+          </div>
+
+          <div class="device-diag-grid">
+            <div class="diag-card">
+              <div class="diag-icon"><i class="fa-solid fa-microchip text-green"></i></div>
+              <div class="diag-content">
+                <span class="label">Controller MCU</span>
+                <strong id="diagMcu">ESP32 DevKit V1 (Dual Core 240MHz)</strong>
               </div>
             </div>
 
-            <div class="card-bottom">
-              <div class="stat-pill text-amber">
-                <i class="fa-solid fa-thermometer"></i>
-                <span id="hintTemp">No Data</span>
+            <div class="diag-card">
+              <div class="diag-icon"><i class="fa-solid fa-code-branch text-cyan"></i></div>
+              <div class="diag-content">
+                <span class="label">Firmware Release</span>
+                <strong id="diagFw">v2.0.0 (Modbus + RTDB REST Engine)</strong>
+              </div>
+            </div>
+
+            <div class="diag-card">
+              <div class="diag-icon"><i class="fa-solid fa-wifi text-emerald"></i></div>
+              <div class="diag-content">
+                <span class="label">Wi-Fi RSSI Strength</span>
+                <strong id="diagRssi">-- dBm</strong>
+              </div>
+            </div>
+
+            <div class="diag-card">
+              <div class="diag-icon"><i class="fa-solid fa-network-wired text-amber"></i></div>
+              <div class="diag-content">
+                <span class="label">RS485 UART Pins</span>
+                <strong>GPIO 16 (RX2), 17 (TX2), 4 (DE/RE)</strong>
+              </div>
+            </div>
+
+            <div class="diag-card">
+              <div class="diag-icon"><i class="fa-solid fa-clock-rotate-left text-magenta"></i></div>
+              <div class="diag-content">
+                <span class="label">Controller Uptime</span>
+                <strong id="diagUptime">--</strong>
+              </div>
+            </div>
+
+            <div class="diag-card">
+              <div class="diag-icon"><i class="fa-solid fa-shield-halved text-green"></i></div>
+              <div class="diag-content">
+                <span class="label">Firebase REST Engine</span>
+                <strong>HTTPS (TLS / Non-blocking)</strong>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- 3. Electrical Conductivity (EC / Salinity) -->
-          <div class="neon-card card-ec">
-            <div class="card-top">
-              <div class="param-info">
-                <div class="param-icon"><i class="fa-solid fa-bolt-lightning"></i></div>
-                <div>
-                  <h3>Conductivity (EC)</h3>
-                  <span>Salinity & Nutrients</span>
-                </div>
-              </div>
-              <button class="card-opt-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-            </div>
-            
-            <div class="card-center">
-              <div class="radial-gauge">
-                <svg viewBox="0 0 120 120" class="gauge-svg">
-                  <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
-                  <circle cx="60" cy="60" r="50" class="gauge-glow" id="circleEc" stroke-dasharray="314" stroke-dashoffset="314"></circle>
-                </svg>
-                <div class="gauge-value-content">
-                  <span class="value-number" id="valEc">--</span>
-                  <span class="value-unit">µS/cm</span>
-                  <span class="value-sub">Salinity</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="card-bottom">
-              <div class="stat-pill text-emerald">
-                <i class="fa-solid fa-bolt"></i>
-                <span id="hintEc">No Data</span>
-              </div>
-            </div>
+        <!-- =================================================================
+             7. DATA LOGS TAB VIEW (Searchable Table)
+             ================================================================= -->
+        <div class="tab-view" id="tab-logs">
+          <div class="view-header-banner">
+            <h2><i class="fa-solid fa-file-waveform text-cyan"></i> Telemetry Data Records</h2>
+            <p>Historical sensor logs stored in Firebase Realtime Database</p>
           </div>
 
-          <!-- 4. Soil pH -->
-          <div class="neon-card card-ph">
-            <div class="card-top">
-              <div class="param-info">
-                <div class="param-icon"><i class="fa-solid fa-flask-vial"></i></div>
-                <div>
-                  <h3>pH Level</h3>
-                  <span>Soil Acidity / Alkalinity</span>
-                </div>
-              </div>
-              <button class="card-opt-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+          <div class="logs-card">
+            <div class="logs-toolbar">
+              <input type="text" class="search-input" id="logSearch" placeholder="Search by timestamp or value...">
+              <button class="btn-export" id="btnDownloadJson"><i class="fa-solid fa-file-code"></i> Download JSON</button>
             </div>
-            
-            <div class="card-center">
-              <div class="radial-gauge">
-                <svg viewBox="0 0 120 120" class="gauge-svg">
-                  <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
-                  <circle cx="60" cy="60" r="50" class="gauge-glow" id="circlePh" stroke-dasharray="314" stroke-dashoffset="314"></circle>
-                </svg>
-                <div class="gauge-value-content">
-                  <span class="value-number" id="valPh">--</span>
-                  <span class="value-unit">pH</span>
-                  <span class="value-sub" id="phNatureLabel">--</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="card-bottom">
-              <div class="stat-pill text-rose">
-                <i class="fa-solid fa-flask"></i>
-                <span id="hintPh">No Data</span>
-              </div>
+            <div class="table-responsive">
+              <table class="logs-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Moisture (%)</th>
+                    <th>Temp (°C)</th>
+                    <th>EC (µS/cm)</th>
+                    <th>pH</th>
+                    <th>N (mg/kg)</th>
+                    <th>P (mg/kg)</th>
+                    <th>K (mg/kg)</th>
+                    <th>Fertility</th>
+                  </tr>
+                </thead>
+                <tbody id="logsTableBody">
+                  <tr><td colspan="9" class="text-center text-muted">Awaiting telemetry logs from Firebase...</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
+        </div>
 
-          <!-- 5. Nitrogen (N) -->
-          <div class="neon-card card-nitrogen">
-            <div class="card-top">
-              <div class="param-info">
-                <div class="param-icon"><i class="fa-solid fa-leaf"></i></div>
-                <div>
-                  <h3>Nitrogen (N)</h3>
-                  <span>Available Nitrogen</span>
-                </div>
-              </div>
-              <button class="card-opt-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-            </div>
-            
-            <div class="card-center">
-              <div class="radial-gauge">
-                <svg viewBox="0 0 120 120" class="gauge-svg">
-                  <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
-                  <circle cx="60" cy="60" r="50" class="gauge-glow" id="circleN" stroke-dasharray="314" stroke-dashoffset="314"></circle>
-                </svg>
-                <div class="gauge-value-content">
-                  <span class="value-number" id="valNitrogen">--</span>
-                  <span class="value-unit">mg/kg</span>
-                  <span class="value-sub">Leaf Vitality</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="card-bottom">
-              <div class="stat-pill text-emerald">
-                <i class="fa-solid fa-seedling"></i>
-                <span id="hintN">No Data</span>
-              </div>
-            </div>
+        <!-- =================================================================
+             8. SETTINGS TAB VIEW
+             ================================================================= -->
+        <div class="tab-view" id="tab-settings">
+          <div class="view-header-banner">
+            <h2><i class="fa-solid fa-gear text-cyan"></i> System & Farm Profile Settings</h2>
+            <p>Configure precision agriculture thresholds and cloud endpoint bindings</p>
           </div>
 
-          <!-- 6. Phosphorus (P) -->
-          <div class="neon-card card-phosphorus">
-            <div class="card-top">
-              <div class="param-info">
-                <div class="param-icon"><i class="fa-solid fa-atom"></i></div>
-                <div>
-                  <h3>Phosphorus (P)</h3>
-                  <span>Available Phosphorus</span>
-                </div>
+          <div class="settings-grid">
+            <div class="settings-card">
+              <h3><i class="fa-solid fa-wheat-awn text-amber"></i> Crop Profile Calibration</h3>
+              <div class="setting-group">
+                <label>Target Crop Type</label>
+                <select class="setting-input">
+                  <option selected>Wheat / Cereals</option>
+                  <option>Paddy / Rice</option>
+                  <option>Cotton</option>
+                  <option>Sugarcane</option>
+                  <option>Horticulture / Vegetables</option>
+                </select>
               </div>
-              <button class="card-opt-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-            </div>
-            
-            <div class="card-center">
-              <div class="radial-gauge">
-                <svg viewBox="0 0 120 120" class="gauge-svg">
-                  <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
-                  <circle cx="60" cy="60" r="50" class="gauge-glow" id="circleP" stroke-dasharray="314" stroke-dashoffset="314"></circle>
-                </svg>
-                <div class="gauge-value-content">
-                  <span class="value-number" id="valPhosphorus">--</span>
-                  <span class="value-unit">mg/kg</span>
-                  <span class="value-sub">Root Vitality</span>
-                </div>
+              <div class="setting-group">
+                <label>Optimal Moisture Target (%)</label>
+                <input type="number" class="setting-input" value="45">
+              </div>
+              <div class="setting-group">
+                <label>Target Soil pH</label>
+                <input type="number" class="setting-input" step="0.1" value="6.5">
               </div>
             </div>
 
-            <div class="card-bottom">
-              <div class="stat-pill text-cyan">
-                <i class="fa-solid fa-spa"></i>
-                <span id="hintP">No Data</span>
+            <div class="settings-card">
+              <h3><i class="fa-solid fa-cloud text-cyan"></i> Cloud Endpoint</h3>
+              <div class="setting-group">
+                <label>Firebase Database Host</label>
+                <input type="text" class="setting-input text-mono" readonly value="dharti-rakshak-iot-e52e1-default-rtdb.asia-southeast1.firebasedatabase.app">
               </div>
+              <div class="setting-group">
+                <label>Telemetry Polling Interval</label>
+                <input type="text" class="setting-input text-mono" readonly value="15 Seconds">
+              </div>
+              <button class="btn-save"><i class="fa-solid fa-check"></i> Configuration Saved</button>
             </div>
           </div>
+        </div>
 
-          <!-- 7. Potassium (K) -->
-          <div class="neon-card card-potassium">
-            <div class="card-top">
-              <div class="param-info">
-                <div class="param-icon"><i class="fa-solid fa-spa"></i></div>
-                <div>
-                  <h3>Potassium (K)</h3>
-                  <span>Available Potassium</span>
-                </div>
-              </div>
-              <button class="card-opt-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-            </div>
-            
-            <div class="card-center">
-              <div class="radial-gauge">
-                <svg viewBox="0 0 120 120" class="gauge-svg">
-                  <circle cx="60" cy="60" r="50" class="gauge-track"></circle>
-                  <circle cx="60" cy="60" r="50" class="gauge-glow" id="circleK" stroke-dasharray="314" stroke-dashoffset="314"></circle>
-                </svg>
-                <div class="gauge-value-content">
-                  <span class="value-number" id="valPotassium">--</span>
-                  <span class="value-unit">mg/kg</span>
-                  <span class="value-sub">Immunity</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="card-bottom">
-              <div class="stat-pill text-magenta">
-                <i class="fa-solid fa-shield-halved"></i>
-                <span id="hintK">No Data</span>
-              </div>
-            </div>
-          </div>
-
-        </section>
-
-        <!-- MIDDLE ROW: DUAL-AXIS TRENDS, NPK LEVELS, & SOIL HEALTH -->
-        <section class="analytics-row">
-          
-          <!-- Soil Moisture & Temperature Trend -->
-          <div class="analytics-panel trend-panel">
-            <div class="panel-header">
-              <div class="panel-title">
-                <i class="fa-solid fa-chart-line text-cyan"></i>
-                <h3>Soil Moisture & Temperature Trend</h3>
-              </div>
-              <div class="panel-controls">
-                <div class="legend-pills">
-                  <span class="legend-item"><span class="legend-dot moisture-dot"></span> Soil Moisture (%)</span>
-                  <span class="legend-item"><span class="legend-dot temp-dot"></span> Soil Temperature (°C)</span>
-                </div>
-              </div>
-            </div>
-            <div class="chart-wrapper" id="trendChartWrapper">
-              <canvas id="trendChart"></canvas>
-              <div class="chart-empty-overlay" id="trendEmptyState">
-                <i class="fa-solid fa-satellite-dish fa-bounce"></i>
-                <span>Awaiting telemetry from ESP32 node...</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- NPK Levels Bar Chart -->
-          <div class="analytics-panel npk-panel">
-            <div class="panel-header">
-              <div class="panel-title">
-                <i class="fa-solid fa-chart-simple text-cyan"></i>
-                <h3>NPK Levels (mg/kg)</h3>
-              </div>
-              <div class="panel-controls">
-                <span class="live-tag"><i class="fa-solid fa-circle"></i> Live Read</span>
-              </div>
-            </div>
-            <div class="chart-wrapper">
-              <canvas id="npkChart"></canvas>
-            </div>
-          </div>
-
-          <!-- Soil Health Index & Alerts Column -->
-          <div class="health-alerts-col">
-            
-            <!-- Soil Health Card -->
-            <div class="analytics-panel health-card">
-              <div class="panel-title">
-                <i class="fa-solid fa-heart-pulse text-emerald"></i>
-                <h3>Soil Health Index</h3>
-              </div>
-              <div class="health-content">
-                <div class="health-circle">
-                  <svg viewBox="0 0 100 100" class="health-svg">
-                    <circle cx="50" cy="50" r="42" class="gauge-track"></circle>
-                    <circle cx="50" cy="50" r="42" class="health-fill" id="healthCircle" stroke-dasharray="264" stroke-dashoffset="264"></circle>
-                  </svg>
-                  <div class="health-number">
-                    <span id="healthScore">--</span>
-                    <small id="healthScoreSub">Awaiting</small>
-                  </div>
-                </div>
-                <div class="health-details">
-                  <div class="health-status-badge">
-                    <span class="label">Overall Status</span>
-                    <strong class="text-muted" id="healthStatusText">Awaiting Data</strong>
-                  </div>
-                  <p class="health-tip" id="healthTipText">Connect ESP32 sensor node to calculate live soil fertility score.</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Alerts & Notifications Card -->
-            <div class="analytics-panel alerts-card">
-              <div class="panel-header">
-                <div class="panel-title">
-                  <i class="fa-solid fa-bell text-emerald"></i>
-                  <h3>Alerts & Telemetry Feed</h3>
-                </div>
-              </div>
-              <div class="alerts-list" id="alertsContainer">
-                <div class="alert-item">
-                  <i class="fa-solid fa-circle-notch fa-spin text-amber"></i>
-                  <div class="alert-body">
-                    <span>Waiting for initial sensor transmission...</span>
-                  </div>
-                  <span class="alert-time">--:--</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-        </section>
-
-      </main>
+      </div>
 
       <!-- HARDWARE FOOTER STATUS BAR -->
       <footer class="hardware-footer">
         <div class="hw-item">
           <i class="fa-solid fa-microchip hw-icon"></i>
-          <div>
-            <span class="hw-label">Device</span>
-            <span class="hw-val" id="footerDeviceId">ESP32 (Disconnected)</span>
-          </div>
+          <div><span class="hw-label">Device</span><span class="hw-val" id="footerDeviceId">ESP32 (Disconnected)</span></div>
         </div>
         <div class="hw-item">
           <i class="fa-solid fa-code hw-icon"></i>
-          <div>
-            <span class="hw-label">Firmware</span>
-            <span class="hw-val" id="footerFirmware">--</span>
-          </div>
+          <div><span class="hw-label">Firmware</span><span class="hw-val" id="footerFirmware">--</span></div>
         </div>
         <div class="hw-item">
           <i class="fa-solid fa-wifi hw-icon text-muted" id="footerWifiIcon"></i>
-          <div>
-            <span class="hw-label">Wi-Fi Signal</span>
-            <span class="hw-val" id="footerWifi">-- dBm</span>
-          </div>
+          <div><span class="hw-label">Wi-Fi Signal</span><span class="hw-val" id="footerWifi">-- dBm</span></div>
         </div>
         <div class="hw-item">
           <i class="fa-solid fa-clock hw-icon text-muted"></i>
-          <div>
-            <span class="hw-label">Controller Uptime</span>
-            <span class="hw-val" id="footerUptime">--</span>
-          </div>
+          <div><span class="hw-label">Controller Uptime</span><span class="hw-val" id="footerUptime">--</span></div>
         </div>
         <div class="hw-item">
           <i class="fa-solid fa-cloud-arrow-up hw-icon text-cyan"></i>
-          <div>
-            <span class="hw-label">Telemetry Feed</span>
-            <span class="hw-val text-green" id="footerFeedStatus">Realtime Listen</span>
-          </div>
+          <div><span class="hw-label">Telemetry Feed</span><span class="hw-val text-green" id="footerFeedStatus">Realtime Listen</span></div>
         </div>
       </footer>
 
