@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DHARTI-RAKSHAK | Smart Soil Telemetry System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="dashboard-wrapper">
+    <!-- TOP NAVIGATION -->
+    <header class="top-nav">
+      <div class="brand-section">
+        <div class="brand-logo">
+          <i class="fa-solid fa-seedling"></i>
+        </div>
+        <div class="brand-text">
+          <h1>DHARTI-RAKSHAK</h1>
+          <p class="subtitle">Smart Soil Telemetry & Precision Agriculture</p>
+        </div>
+      </div>
+
+      <div class="status-section">
+        <div class="device-badge" id="deviceStatusBadge">
+          <span class="pulse-dot"></span>
+          <span id="deviceStatusText">Connecting...</span>
+        </div>
+        <div class="last-sync-tag">
+          <i class="fa-regular fa-clock"></i>
+          <span id="lastUpdatedText">Awaiting telemetry...</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="main-content">
+      
+      <!-- QUICK OVERVIEW / HIGHLIGHT BANNER -->
+      <section class="soil-health-banner">
+        <div class="health-pill">
+          <span class="label"><i class="fa-solid fa-flask"></i> Soil Fertility</span>
+          <span class="value-tag" id="fertilityTag">ANALYZING</span>
+        </div>
+        <div class="health-pill">
+          <span class="label"><i class="fa-solid fa-vial"></i> Soil Nature</span>
+          <span class="value-tag" id="soilTypeTag">ANALYZING</span>
+        </div>
+        <div class="health-pill">
+          <span class="label"><i class="fa-solid fa-bolt"></i> Total NPK Balance</span>
+          <span class="value-tag" id="npkTotalTag">0 mg/kg</span>
+        </div>
+        <div class="health-pill">
+          <span class="label"><i class="fa-solid fa-wifi"></i> Signal RSSI</span>
+          <span class="value-tag" id="wifiRssiTag">-- dBm</span>
+        </div>
+      </section>
+
+      <!-- 7 PRIMARY SENSOR TELEMETRY CARDS -->
+      <section class="telemetry-grid">
+        
+        <!-- 1. Moisture Card -->
+        <div class="sensor-card moisture-card" id="cardMoisture">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="icon-wrap"><i class="fa-solid fa-droplet"></i></span>
+              <h3>Soil Moisture</h3>
+            </div>
+            <span class="sensor-unit">% VWC</span>
+          </div>
+          <div class="card-body">
+            <div class="metric-display">
+              <span class="metric-val" id="valMoisture">--</span>
+              <span class="metric-unit">%</span>
+            </div>
+            <div class="gauge-container">
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="barMoisture" style="width: 0%;"></div>
+              </div>
+              <div class="scale-ticks">
+                <span>0% Dry</span>
+                <span>50% Optimal</span>
+                <span>100% Saturated</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="status-hint" id="hintMoisture">Awaiting sample</span>
+          </div>
+        </div>
+
+        <!-- 2. Temperature Card -->
+        <div class="sensor-card temp-card" id="cardTemp">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="icon-wrap"><i class="fa-solid fa-temperature-half"></i></span>
+              <h3>Soil Temperature</h3>
+            </div>
+            <span class="sensor-unit">Celsius</span>
+          </div>
+          <div class="card-body">
+            <div class="metric-display">
+              <span class="metric-val" id="valTemp">--</span>
+              <span class="metric-unit">°C</span>
+            </div>
+            <div class="gauge-container">
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="barTemp" style="width: 0%;"></div>
+              </div>
+              <div class="scale-ticks">
+                <span>-10°C</span>
+                <span>25°C Room</span>
+                <span>60°C Hot</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="status-hint" id="hintTemp">Awaiting sample</span>
+          </div>
+        </div>
+
+        <!-- 3. Electrical Conductivity (EC) Card -->
+        <div class="sensor-card ec-card" id="cardEc">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="icon-wrap"><i class="fa-solid fa-bolt-lightning"></i></span>
+              <h3>Conductivity (EC)</h3>
+            </div>
+            <span class="sensor-unit">Salinity</span>
+          </div>
+          <div class="card-body">
+            <div class="metric-display">
+              <span class="metric-val" id="valEc">--</span>
+              <span class="metric-unit">µS/cm</span>
+            </div>
+            <div class="gauge-container">
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="barEc" style="width: 0%;"></div>
+              </div>
+              <div class="scale-ticks">
+                <span>0 Low</span>
+                <span>1500 Ideal</span>
+                <span>3000+ High</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="status-hint" id="hintEc">Awaiting sample</span>
+          </div>
+        </div>
+
+        <!-- 4. pH Card -->
+        <div class="sensor-card ph-card" id="cardPh">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="icon-wrap"><i class="fa-solid fa-flask-vial"></i></span>
+              <h3>Soil Acidity (pH)</h3>
+            </div>
+            <span class="sensor-unit">Scale 0-14</span>
+          </div>
+          <div class="card-body">
+            <div class="metric-display">
+              <span class="metric-val" id="valPh">--</span>
+              <span class="metric-unit">pH</span>
+            </div>
+            <div class="gauge-container">
+              <div class="ph-spectrum-bar">
+                <div class="ph-marker" id="markerPh" style="left: 50%;"></div>
+              </div>
+              <div class="scale-ticks">
+                <span>0 Acidic</span>
+                <span>7 Neutral</span>
+                <span>14 Alkaline</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="status-hint" id="hintPh">Awaiting sample</span>
+          </div>
+        </div>
+
+        <!-- 5. Nitrogen (N) Card -->
+        <div class="sensor-card npk-card n-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="elem-badge n-badge">N</span>
+              <h3>Nitrogen</h3>
+            </div>
+            <span class="sensor-unit">Macronutrient</span>
+          </div>
+          <div class="card-body">
+            <div class="metric-display">
+              <span class="metric-val" id="valNitrogen">--</span>
+              <span class="metric-unit">mg/kg</span>
+            </div>
+            <div class="nutrient-level-bar">
+              <div class="level-fill" id="barNitrogen" style="width: 0%;"></div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="status-hint" id="hintNitrogen">Leaf growth support</span>
+          </div>
+        </div>
+
+        <!-- 6. Phosphorus (P) Card -->
+        <div class="sensor-card npk-card p-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="elem-badge p-badge">P</span>
+              <h3>Phosphorus</h3>
+            </div>
+            <span class="sensor-unit">Macronutrient</span>
+          </div>
+          <div class="card-body">
+            <div class="metric-display">
+              <span class="metric-val" id="valPhosphorus">--</span>
+              <span class="metric-unit">mg/kg</span>
+            </div>
+            <div class="nutrient-level-bar">
+              <div class="level-fill" id="barPhosphorus" style="width: 0%;"></div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="status-hint" id="hintPhosphorus">Root & seed vitality</span>
+          </div>
+        </div>
+
+        <!-- 7. Potassium (K) Card -->
+        <div class="sensor-card npk-card k-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="elem-badge k-badge">K</span>
+              <h3>Potassium</h3>
+            </div>
+            <span class="sensor-unit">Macronutrient</span>
+          </div>
+          <div class="card-body">
+            <div class="metric-display">
+              <span class="metric-val" id="valPotassium">--</span>
+              <span class="metric-unit">mg/kg</span>
+            </div>
+            <div class="nutrient-level-bar">
+              <div class="level-fill" id="barPotassium" style="width: 0%;"></div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="status-hint" id="hintPotassium">Immunity & yield</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- HISTORICAL TREND CHARTS -->
+      <section class="chart-section">
+        <div class="chart-header">
+          <div class="chart-title-group">
+            <h2><i class="fa-solid fa-chart-line"></i> Historical Telemetry Trends</h2>
+            <p>Real-time time-series telemetry synced from Firebase Realtime Database</p>
+          </div>
+          <div class="chart-controls">
+            <div class="filter-pills" id="paramFilters">
+              <button class="param-pill active" data-param="moisture">Moisture</button>
+              <button class="param-pill active" data-param="temp">Temperature</button>
+              <button class="param-pill active" data-param="ec">EC</button>
+              <button class="param-pill active" data-param="ph">pH</button>
+              <button class="param-pill" data-param="npk">NPK (N/P/K)</button>
+            </div>
+            <div class="limit-selector">
+              <label><i class="fa-solid fa-list-ol"></i> Points:</label>
+              <select id="dataPointLimit">
+                <option value="25">Last 25</option>
+                <option value="50" selected>Last 50</option>
+                <option value="100">Last 100</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="chart-canvas-container">
+          <canvas id="telemetryChart"></canvas>
+          <div class="chart-empty-state" id="chartLoader">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <span>Connecting to Firebase Time-Series Engine...</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- DEVICE HARDWARE & SYSTEM STATUS -->
+      <section class="device-meta-grid">
+        <div class="meta-card">
+          <div class="meta-icon"><i class="fa-solid fa-microchip"></i></div>
+          <div class="meta-info">
+            <span class="meta-label">Node Identifier</span>
+            <span class="meta-val" id="metaDeviceId">ESP32_DHARTI_01</span>
+          </div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-icon"><i class="fa-solid fa-code-branch"></i></div>
+          <div class="meta-info">
+            <span class="meta-label">Firmware Release</span>
+            <span class="meta-val" id="metaFirmware">v2.0.0</span>
+          </div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-icon"><i class="fa-solid fa-stopwatch"></i></div>
+          <div class="meta-info">
+            <span class="meta-label">Controller Uptime</span>
+            <span class="meta-val" id="metaUptime">--</span>
+          </div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-icon"><i class="fa-solid fa-network-wired"></i></div>
+          <div class="meta-info">
+            <span class="meta-label">Node IP Address</span>
+            <span class="meta-val" id="metaIp">--</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-content">
+        <p><strong>DHARTI-RAKSHAK</strong> &copy; 2026 &mdash; Smart IoT Agricultural Telemetry System</p>
+        <p class="tech-sub">ESP32 &bull; RS485 Modbus RTU &bull; Firebase RTDB &bull; Cloudflare Pages</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Firebase Modular SDK via CDN -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
