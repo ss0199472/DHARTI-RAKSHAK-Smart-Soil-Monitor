@@ -356,6 +356,59 @@ body.dark-theme {
   box-shadow: 0 0 8px #22c55e;
 }
 
+.offline-badge .indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+.pulse-dot-red {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+.radar-box.offline {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.05);
+  box-shadow: none;
+}
+
+.radar-box.offline .radar-sweep {
+  display: none;
+}
+
+.radar-box.offline .radar-dot {
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+.chart-empty-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: rgba(13, 22, 33, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.chart-empty-overlay i {
+  font-size: 1.8rem;
+  color: var(--neon-cyan);
+}
+
 .badge-text {
   display: flex;
   flex-direction: column;

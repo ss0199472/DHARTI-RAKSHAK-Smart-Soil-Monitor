@@ -1,7 +1,7 @@
 /**
  * ============================================================================
- * DHARTI-RAKSHAK: Ultra-Modern Glassmorphic Telemetry Controller
- * Firebase Realtime Database Engine + Chart.js Multi-Axis Visualizers
+ * DHARTI-RAKSHAK: Genuine Real-Time IoT Telemetry Engine
+ * Directly connected to Firebase Realtime Database
  * ============================================================================
  */
 
@@ -14,7 +14,7 @@ import {
   limitToLast 
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// Firebase Endpoint
+// Official Realtime Database Endpoint
 const firebaseConfig = {
   databaseURL: "https://dharti-rakshak-iot-e52e1-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
@@ -31,6 +31,16 @@ const elNitrogen = document.getElementById('valNitrogen');
 const elPhosphorus = document.getElementById('valPhosphorus');
 const elPotassium = document.getElementById('valPotassium');
 
+// Hint / Status text
+const hintMoisture = document.getElementById('hintMoisture');
+const hintTemp = document.getElementById('hintTemp');
+const hintEc = document.getElementById('hintEc');
+const hintPh = document.getElementById('hintPh');
+const hintN = document.getElementById('hintN');
+const hintP = document.getElementById('hintP');
+const hintK = document.getElementById('hintK');
+const phNatureLabel = document.getElementById('phNatureLabel');
+
 // Circular SVG Glow Rings (Circumference = 314px for r=50)
 const CIRCUMFERENCE = 314;
 const circleMoisture = document.getElementById('circleMoisture');
@@ -42,23 +52,38 @@ const circleP = document.getElementById('circleP');
 const circleK = document.getElementById('circleK');
 
 // System status & meta DOM
+const esp32Badge = document.getElementById('esp32Badge');
 const esp32StatusText = document.getElementById('esp32StatusText');
+const esp32SubText = document.getElementById('esp32SubText');
+const radarBox = document.getElementById('radarBox');
+const sidebarDot = document.getElementById('sidebarDot');
+const sidebarStatusText = document.getElementById('sidebarStatusText');
+const sidebarUptime = document.getElementById('sidebarUptime');
+const sidebarDataPoints = document.getElementById('sidebarDataPoints');
+const sidebarSyncStatus = document.getElementById('sidebarSyncStatus');
 const lastUpdatedVal = document.getElementById('lastUpdatedVal');
 const liveClockTime = document.getElementById('liveClockTime');
 const liveClockDate = document.getElementById('liveClockDate');
-const sidebarUptime = document.getElementById('sidebarUptime');
-const sidebarDataPoints = document.getElementById('sidebarDataPoints');
 const footerDeviceId = document.getElementById('footerDeviceId');
 const footerFirmware = document.getElementById('footerFirmware');
 const footerWifi = document.getElementById('footerWifi');
+const footerWifiIcon = document.getElementById('footerWifiIcon');
+const footerUptime = document.getElementById('footerUptime');
 const healthScore = document.getElementById('healthScore');
+const healthScoreSub = document.getElementById('healthScoreSub');
 const healthStatusText = document.getElementById('healthStatusText');
 const healthCircle = document.getElementById('healthCircle');
-const phNatureLabel = document.getElementById('phNatureLabel');
+const healthTipText = document.getElementById('healthTipText');
+const alertsContainer = document.getElementById('alertsContainer');
+const alertsCountBadge = document.getElementById('alertsCountBadge');
+const trendEmptyState = document.getElementById('trendEmptyState');
 
 // Chart instances
 let trendChartInstance = null;
 let npkChartInstance = null;
+
+// Track last known heartbeat timestamp
+let lastSeenTimestamp = 0;
 
 /**
  * 1. REALTIME CLOCK
@@ -68,6 +93,9 @@ function startClock() {
     const now = new Date();
     liveClockTime.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     liveClockDate.textContent = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    
+    // Heartbeat check every second
+    verifyHeartbeat();
   }
   update();
   setInterval(update, 1000);
@@ -84,10 +112,68 @@ function setRadialOffset(circleElem, percentage) {
 }
 
 /**
- * 3. INITIALIZE CHARTS (Dual-Axis Trend + NPK Vertical Bars)
+ * 3. DEVICE ONLINE / OFFLINE VERIFIER
+ */
+function setDeviceOnline(isOnline, lastTime) {
+  if (isOnline) {
+    esp32Badge.className = 'header-badge online-badge';
+    esp32StatusText.textContent = 'ESP32 Online';
+    esp32SubText.textContent = 'Live Transmission';
+    radarBox.classList.remove('offline');
+    sidebarDot.className = 'pulse-dot-green';
+    sidebarStatusText.textContent = 'ESP32 Connected';
+    sidebarSyncStatus.textContent = 'Streaming';
+    sidebarSyncStatus.className = 'text-green';
+  } else {
+    esp32Badge.className = 'header-badge offline-badge';
+    esp32StatusText.textContent = 'ESP32 Offline';
+    esp32SubText.textContent = lastTime ? `Last seen: ${getRelativeTime(lastTime)}` : 'Awaiting Heartbeat';
+    radarBox.classList.add('offline');
+    sidebarDot.className = 'pulse-dot-red';
+    sidebarStatusText.textContent = 'ESP32 Disconnected';
+    sidebarSyncStatus.textContent = 'Idle (No Stream)';
+    sidebarSyncStatus.className = 'text-muted';
+  }
+}
+
+function verifyHeartbeat() {
+  if (!lastSeenTimestamp) {
+    setDeviceOnline(false, null);
+    return;
+  }
+  const now = Date.now();
+  const diffMinutes = (now - lastSeenTimestamp) / 1000 / 60;
+  // If ESP32 hasn't posted in > 3.5 minutes, mark as offline
+  if (diffMinutes <= 3.5) {
+    setDeviceOnline(true, lastSeenTimestamp);
+  } else {
+    setDeviceOnline(false, lastSeenTimestamp);
+  }
+}
+
+function getRelativeTime(timestamp) {
+  if (!timestamp) return 'Never';
+  const diffSec = Math.floor((Date.now() - timestamp) / 1000);
+  if (diffSec < 20) return 'Just now';
+  if (diffSec < 60) return `${diffSec}s ago`;
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+  return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatUptime(seconds) {
+  if (!seconds) return '--';
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  if (hrs > 0) return `${hrs}h ${mins}m`;
+  return `${mins}m ${secs}s`;
+}
+
+/**
+ * 4. INITIALIZE CHARTS WITH CLEAN EMPTY STATE
  */
 function initCharts() {
-  // Chart 1: Dual-Axis Moisture & Temperature Trend
+  // Chart 1: Dual-Axis Moisture & Temperature Trend (Initialized with 0 data)
   const ctxTrend = document.getElementById('trendChart').getContext('2d');
   
   const moistureGrad = ctxTrend.createLinearGradient(0, 0, 0, 200);
@@ -101,11 +187,11 @@ function initCharts() {
   trendChartInstance = new Chart(ctxTrend, {
     type: 'line',
     data: {
-      labels: ['10:00 AM', '02:00 PM', '06:00 PM', '10:00 PM', '02:00 AM', '06:00 AM', '10:00 AM'],
+      labels: [],
       datasets: [
         {
           label: 'Soil Moisture (%)',
-          data: [42, 45, 38, 35, 46, 52, 46],
+          data: [],
           borderColor: '#38bdf8',
           backgroundColor: moistureGrad,
           fill: true,
@@ -119,7 +205,7 @@ function initCharts() {
         },
         {
           label: 'Soil Temperature (°C)',
-          data: [26, 29, 32, 28, 24, 22, 28.6],
+          data: [],
           borderColor: '#fb923c',
           backgroundColor: tempGrad,
           fill: true,
@@ -170,13 +256,13 @@ function initCharts() {
           grid: { drawOnChartArea: false },
           ticks: { color: '#fb923c', font: { family: 'JetBrains Mono', size: 10 } },
           min: 0,
-          max: 50
+          max: 60
         }
       }
     }
   });
 
-  // Chart 2: NPK Levels (mg/kg) Vibrant Vertical Bars
+  // Chart 2: NPK Levels (mg/kg) (Initialized with [0, 0, 0])
   const ctxNpk = document.getElementById('npkChart').getContext('2d');
   
   npkChartInstance = new Chart(ctxNpk, {
@@ -184,7 +270,7 @@ function initCharts() {
     data: {
       labels: ['Nitrogen (N)', 'Phosphorus (P)', 'Potassium (K)'],
       datasets: [{
-        data: [38, 24, 312],
+        data: [0, 0, 0],
         backgroundColor: [
           'rgba(34, 197, 94, 0.85)',
           'rgba(6, 182, 212, 0.85)',
@@ -220,7 +306,7 @@ function initCharts() {
           grid: { color: 'rgba(255, 255, 255, 0.04)' },
           ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } },
           min: 0,
-          suggestedMax: 400
+          suggestedMax: 200
         }
       }
     }
@@ -228,81 +314,139 @@ function initCharts() {
 }
 
 /**
- * 4. FIREBASE REALTIME LISTENERS
+ * 5. FIREBASE REALTIME TELEMETRY LISTENERS
  */
 function setupFirebaseListeners() {
-  // Live Readings Listener
+  
+  // 1. LIVE READINGS LISTENER
   const liveRef = ref(db, 'dharti_rakshak/live_readings');
   onValue(liveRef, (snapshot) => {
     const data = snapshot.val();
-    if (!data) return;
-
-    // Moisture (0-100%)
-    const moist = Number(data.moisture ?? 46.0);
-    elMoisture.textContent = moist.toFixed(0);
-    setRadialOffset(circleMoisture, moist);
-
-    // Temperature (-40 to 85°C)
-    const temp = Number(data.temperature ?? 28.6);
-    elTemp.textContent = temp.toFixed(1);
-    const tempPct = Math.min(Math.max((temp / 50) * 100, 0), 100);
-    setRadialOffset(circleTemp, tempPct);
-
-    // EC Salinity (0-20000 uS/cm)
-    const ec = Number(data.ec ?? 1250);
-    elEc.textContent = ec;
-    const ecPct = Math.min((ec / 3000) * 100, 100);
-    setRadialOffset(circleEc, ecPct);
-
-    // pH (0-14)
-    const ph = Number(data.ph ?? 6.58);
-    elPh.textContent = ph.toFixed(2);
-    const phPct = (ph / 14) * 100;
-    setRadialOffset(circlePh, phPct);
-    phNatureLabel.textContent = ph < 6.0 ? 'Acidic' : ph > 7.5 ? 'Alkaline' : 'Neutral';
-
-    // Nitrogen (0-2000 mg/kg)
-    const n = Number(data.nitrogen ?? 38);
-    elNitrogen.textContent = n;
-    setRadialOffset(circleN, (n / 200) * 100);
-
-    // Phosphorus (0-2000 mg/kg)
-    const p = Number(data.phosphorus ?? 24);
-    elPhosphorus.textContent = p;
-    setRadialOffset(circleP, (p / 150) * 100);
-
-    // Potassium (0-2000 mg/kg)
-    const k = Number(data.potassium ?? 312);
-    elPotassium.textContent = k;
-    setRadialOffset(circleK, (k / 400) * 100);
-
-    // Update NPK Bar Chart
-    if (npkChartInstance) {
-      npkChartInstance.data.datasets[0].data = [n, p, k];
-      npkChartInstance.update();
+    if (!data) {
+      lastUpdatedVal.textContent = 'No data uploaded yet';
+      return;
     }
 
-    // Calculate Soil Health Score (0-100)
-    let score = 80;
-    if (ph >= 6.0 && ph <= 7.5) score += 8; else score -= 10;
-    if (moist >= 35 && moist <= 65) score += 7; else score -= 8;
-    if (n >= 20 && p >= 15 && k >= 100) score += 5;
-    score = Math.min(Math.max(score, 20), 98);
-    
-    healthScore.textContent = score;
-    healthStatusText.textContent = score > 75 ? 'Good Health' : score > 50 ? 'Moderate Health' : 'Action Needed';
-    
-    const healthOffset = 264 - (score / 100) * 264;
-    healthCircle.style.strokeDashoffset = healthOffset;
-
-    // Last Updated Timestamp
     if (data.timestamp) {
+      lastSeenTimestamp = data.timestamp;
+      verifyHeartbeat();
       const d = new Date(data.timestamp);
       lastUpdatedVal.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
+
+    // Moisture (0-100%)
+    if (data.moisture !== undefined) {
+      const moist = Number(data.moisture);
+      elMoisture.textContent = moist.toFixed(1);
+      setRadialOffset(circleMoisture, moist);
+      hintMoisture.textContent = moist < 20 ? 'Very Dry (Irrigate)' : moist > 70 ? 'Waterlogged' : 'Optimal Moisture';
+    }
+
+    // Temperature (-40 to 85°C)
+    if (data.temperature !== undefined) {
+      const temp = Number(data.temperature);
+      elTemp.textContent = temp.toFixed(1);
+      const tempPct = Math.min(Math.max((temp / 50) * 100, 0), 100);
+      setRadialOffset(circleTemp, tempPct);
+      hintTemp.textContent = temp < 15 ? 'Cool Soil' : temp > 35 ? 'High Heat' : 'Healthy Range';
+    }
+
+    // EC Salinity (0-20000 uS/cm)
+    if (data.ec !== undefined) {
+      const ec = Number(data.ec);
+      elEc.textContent = ec;
+      const ecPct = Math.min((ec / 3000) * 100, 100);
+      setRadialOffset(circleEc, ecPct);
+      hintEc.textContent = ec < 500 ? 'Low Salinity' : ec > 2000 ? 'High Salinity' : 'Balanced Salinity';
+    }
+
+    // pH (0-14)
+    if (data.ph !== undefined) {
+      const ph = Number(data.ph);
+      elPh.textContent = ph.toFixed(2);
+      const phPct = (ph / 14) * 100;
+      setRadialOffset(circlePh, phPct);
+      const nature = ph < 6.0 ? 'Acidic' : ph > 7.5 ? 'Alkaline' : 'Neutral';
+      phNatureLabel.textContent = nature;
+      hintPh.textContent = `${nature} pH`;
+    }
+
+    // Nitrogen (mg/kg)
+    if (data.nitrogen !== undefined) {
+      const n = Number(data.nitrogen);
+      elNitrogen.textContent = n;
+      setRadialOffset(circleN, Math.min((n / 150) * 100, 100));
+      hintN.textContent = n < 20 ? 'Low Nitrogen' : n > 120 ? 'High Nitrogen' : 'Adequate';
+    }
+
+    // Phosphorus (mg/kg)
+    if (data.phosphorus !== undefined) {
+      const p = Number(data.phosphorus);
+      elPhosphorus.textContent = p;
+      setRadialOffset(circleP, Math.min((p / 100) * 100, 100));
+      hintP.textContent = p < 15 ? 'Low Phosphorus' : 'Adequate';
+    }
+
+    // Potassium (mg/kg)
+    if (data.potassium !== undefined) {
+      const k = Number(data.potassium);
+      elPotassium.textContent = k;
+      setRadialOffset(circleK, Math.min((k / 300) * 100, 100));
+      hintK.textContent = k < 100 ? 'Low Potassium' : 'Adequate';
+    }
+
+    // Update NPK Bar Chart with Real Values
+    if (npkChartInstance && data.nitrogen !== undefined) {
+      npkChartInstance.data.datasets[0].data = [
+        Number(data.nitrogen ?? 0),
+        Number(data.phosphorus ?? 0),
+        Number(data.potassium ?? 0)
+      ];
+      npkChartInstance.update();
+    }
+
+    // Calculate Real Soil Health Score
+    if (data.ph !== undefined && data.moisture !== undefined) {
+      const ph = Number(data.ph);
+      const moist = Number(data.moisture);
+      const n = Number(data.nitrogen ?? 0);
+      const p = Number(data.phosphorus ?? 0);
+      const k = Number(data.potassium ?? 0);
+
+      let score = 70;
+      if (ph >= 6.0 && ph <= 7.5) score += 10; else score -= 10;
+      if (moist >= 30 && moist <= 65) score += 10; else score -= 10;
+      if (n > 20 && p > 15 && k > 80) score += 10;
+      score = Math.min(Math.max(score, 10), 99);
+
+      healthScore.textContent = score;
+      healthScoreSub.textContent = score >= 75 ? 'Good' : score >= 50 ? 'Moderate' : 'Poor';
+      healthStatusText.textContent = score >= 75 ? 'Good Health' : score >= 50 ? 'Moderate Health' : 'Needs Correction';
+      healthStatusText.className = score >= 75 ? 'text-green' : score >= 50 ? 'text-amber' : 'text-rose';
+      
+      const healthOffset = 264 - (score / 100) * 264;
+      healthCircle.style.strokeDashoffset = healthOffset;
+      healthTipText.textContent = score >= 75 
+        ? 'Soil is well-balanced. Maintain current irrigation and nutrient cycle.' 
+        : 'Adjust irrigation or fertilizer levels to optimize plant growth.';
+    }
+
+    // Add Live Alert
+    if (alertsContainer && data.timestamp) {
+      alertsCountBadge.textContent = '1';
+      alertsContainer.innerHTML = `
+        <div class="alert-item">
+          <i class="fa-solid fa-circle-check text-green"></i>
+          <div class="alert-body">
+            <span>Live telemetry received from ESP32</span>
+          </div>
+          <span class="alert-time">${new Date(data.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+      `;
+    }
   });
 
-  // Device Info Listener
+  // 2. DEVICE INFO LISTENER (Heartbeat, Firmware, RSSI, Uptime)
   const deviceRef = ref(db, 'dharti_rakshak/device_info');
   onValue(deviceRef, (snapshot) => {
     const data = snapshot.val();
@@ -310,46 +454,50 @@ function setupFirebaseListeners() {
 
     if (data.device_id) footerDeviceId.textContent = data.device_id;
     if (data.firmware_version) footerFirmware.textContent = `v${data.firmware_version}`;
-    if (data.wifi_rssi !== undefined) footerWifi.textContent = `${data.wifi_rssi} dBm`;
     
-    if (data.uptime_seconds) {
-      const hrs = Math.floor(data.uptime_seconds / 3600);
-      const mins = Math.floor((data.uptime_seconds % 3600) / 60);
-      sidebarUptime.textContent = `${hrs}h ${mins}m`;
+    if (data.wifi_rssi !== undefined) {
+      footerWifi.textContent = `${data.wifi_rssi} dBm`;
+      footerWifiIcon.className = 'fa-solid fa-wifi hw-icon text-green';
+    }
+    
+    if (data.uptime_seconds !== undefined) {
+      const up = formatUptime(data.uptime_seconds);
+      sidebarUptime.textContent = up;
+      footerUptime.textContent = up;
     }
 
     if (data.last_seen) {
-      const diffMins = (Date.now() - data.last_seen) / 60000;
-      if (diffMins <= 5) {
-        esp32StatusText.textContent = 'ESP32 Online';
-      } else {
-        esp32StatusText.textContent = 'ESP32 Offline';
-      }
+      lastSeenTimestamp = data.last_seen;
+      verifyHeartbeat();
     }
   });
 
-  // Historical Telemetry Query for Trends
-  const histRef = query(ref(db, 'dharti_rakshak/historical_logs'), limitToLast(15));
+  // 3. HISTORICAL TIME-SERIES QUERY (For Line Trend Chart)
+  const histRef = query(ref(db, 'dharti_rakshak/historical_logs'), limitToLast(25));
   onValue(histRef, (snapshot) => {
     const data = snapshot.val();
-    if (!data || !trendChartInstance) return;
+    if (!data || Object.keys(data).length === 0) {
+      trendEmptyState.style.display = 'flex';
+      sidebarDataPoints.textContent = '0';
+      return;
+    }
+
+    trendEmptyState.style.display = 'none';
+    sidebarDataPoints.textContent = Object.keys(data).length.toLocaleString();
 
     const labels = [];
     const moistures = [];
     const temps = [];
-    let count = 0;
 
     Object.values(data).forEach((pt) => {
       if (!pt) return;
-      count++;
-      labels.push(pt.timestamp ? new Date(pt.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Point');
-      moistures.push(Number(pt.moisture ?? 40));
-      temps.push(Number(pt.temperature ?? 25));
+      const t = pt.timestamp ? new Date(pt.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Log';
+      labels.push(t);
+      moistures.push(Number(pt.moisture ?? 0));
+      temps.push(Number(pt.temperature ?? 0));
     });
 
-    sidebarDataPoints.textContent = Object.keys(data).length.toLocaleString();
-
-    if (labels.length > 3) {
+    if (trendChartInstance) {
       trendChartInstance.data.labels = labels;
       trendChartInstance.data.datasets[0].data = moistures;
       trendChartInstance.data.datasets[1].data = temps;
@@ -358,7 +506,7 @@ function setupFirebaseListeners() {
   });
 }
 
-// Mobile sidebar toggle handler
+// Mobile navigation toggle
 document.getElementById('menuToggle')?.addEventListener('click', () => {
   const sidebar = document.getElementById('sidebar');
   if (sidebar.style.display === 'flex') {
@@ -369,9 +517,10 @@ document.getElementById('menuToggle')?.addEventListener('click', () => {
   }
 });
 
-// Boot app
+// Boot application
 document.addEventListener('DOMContentLoaded', () => {
   startClock();
   initCharts();
+  setDeviceOnline(false, null);
   setupFirebaseListeners();
 });
