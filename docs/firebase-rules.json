@@ -1,0 +1,89 @@
+{
+  "rules": {
+    "dharti_rakshak": {
+      // ----------------------------------------------------------------------
+      // DEVELOPMENT RULES (Current)
+      // Open write access for unauthenticated ESP32 REST API calls,
+      // but strictly enforces data structure and ranges.
+      // Public read access for the web dashboard.
+      // ----------------------------------------------------------------------
+      ".read": true, // Allow anyone to read the data (web dashboard)
+      ".write": true, // Allow anyone to write (unauthenticated ESP32)
+      
+      "live_readings": {
+        // Enforce that only these specific fields can exist
+        ".validate": "newData.hasChildren(['moisture', 'temperature', 'ec', 'ph', 'timestamp'])",
+        
+        "moisture": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+        "temperature": { ".validate": "newData.isNumber() && newData.val() >= -40 && newData.val() <= 85" },
+        "ec": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20000" },
+        "ph": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 14" },
+        "nitrogen": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 2000" },
+        "phosphorus": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 2000" },
+        "potassium": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 2000" },
+        "fertility": { ".validate": "newData.isString()" },
+        "soil_type": { ".validate": "newData.isString()" },
+        "timestamp": { ".validate": "newData.isNumber()" },
+        
+        "$other": { ".validate": false } // Reject any undefined fields
+      },
+      
+      "historical_logs": {
+        "$log_id": {
+          // Similar validation for historical logs
+          ".validate": "newData.hasChildren(['moisture', 'temperature', 'timestamp'])",
+          "moisture": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100" },
+          "temperature": { ".validate": "newData.isNumber() && newData.val() >= -40 && newData.val() <= 85" },
+          "ec": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20000" },
+          "ph": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 14" },
+          "nitrogen": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 2000" },
+          "phosphorus": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 2000" },
+          "potassium": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 2000" },
+          "fertility": { ".validate": "newData.isString()" },
+          "soil_type": { ".validate": "newData.isString()" },
+          "timestamp": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      },
+      
+      "device_info": {
+        ".validate": "newData.hasChildren(['device_id', 'last_seen'])",
+        "device_id": { ".validate": "newData.isString()" },
+        "firmware_version": { ".validate": "newData.isString()" },
+        "wifi_rssi": { ".validate": "newData.isNumber()" },
+        "uptime_seconds": { ".validate": "newData.isNumber()" },
+        "last_seen": { ".validate": "newData.isNumber()" },
+        "ip_address": { ".validate": "newData.isString()" },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
+
+/*
+===========================================================================
+PRODUCTION RULES (Future Authentication Setup)
+Use these rules once the ESP32 is authenticated using Firebase Auth (e.g., custom token or email/password).
+
+{
+  "rules": {
+    "dharti_rakshak": {
+      // Allow public read for dashboard
+      ".read": true, 
+      // ONLY allow write if the user is authenticated (ESP32 must log in)
+      ".write": "auth != null", 
+      
+      "live_readings": {
+         // ... (keep the same structural validation rules as above) ...
+      },
+      "historical_logs": {
+         // ... (keep the same structural validation rules as above) ...
+      },
+      "device_info": {
+         // ... (keep the same structural validation rules as above) ...
+      }
+    }
+  }
+}
+===========================================================================
+*/
