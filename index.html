@@ -521,23 +521,41 @@
        ==================================================================== -->
   <div class="maintenance-overlay" id="maintenance-overlay">
     <div class="maintenance-card">
-      <div style="font-size: 3rem; margin-bottom: 12px;">🌿</div>
-      <h2 style="font-family: var(--font-display); font-size: 1.8rem; color: var(--primary-mint); margin-bottom: 10px;">
+      <div style="font-size: 3.2rem; margin-bottom: 12px; filter: drop-shadow(0 0 16px rgba(52, 211, 153, 0.4));">🌿</div>
+      <h2 style="font-family: var(--font-display); font-size: 2rem; color: var(--primary-mint); margin-bottom: 8px;">
         DHARTI RAKSHAK
       </h2>
-      <p style="font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px;">
-        Technology for Protecting the Earth
+      <p style="font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 20px;">
+        Technology for Protecting the Earth &bull; Scheduled Maintenance
       </p>
-      <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 16px 20px; border-radius: var(--radius-md); color: #fbbf24; font-size: 0.92rem; margin-bottom: 24px; line-height: 1.6;" id="maintenance-display-msg">
+      <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); padding: 18px 22px; border-radius: var(--radius-md); color: #fbbf24; font-size: 0.92rem; margin-bottom: 24px; line-height: 1.6;" id="maintenance-display-msg">
         The Dharti Rakshak system is currently undergoing scheduled sensor maintenance & telemetry upgrades. We will be back online shortly.
       </div>
-      <button class="btn-header" id="btn-maintenance-admin" style="background: rgba(16, 185, 129, 0.15); border-color: var(--primary-mint);">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-        </svg>
-        Admin Login to Resume Service
-      </button>
+
+      <!-- Quick Admin Login Form directly inside Maintenance Screen -->
+      <div style="background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px; text-align: left;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+          <span style="font-size: 0.88rem; font-weight: 700; color: var(--primary-mint); display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Administrator Login
+          </span>
+          <span style="font-size: 0.72rem; color: var(--text-dim);">Default PIN: 1234</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+          <input type="password" id="maint-pin-input" class="admin-input-text" placeholder="Enter Admin Passcode" style="flex: 1;">
+          <button class="btn-header" id="btn-maint-login" style="background: var(--primary-emerald); color: var(--text-inverse); font-weight: 700; white-space: nowrap; padding: 10px 18px;">
+            Unlock & Resume ⚡
+          </button>
+        </div>
+
+        <div id="maint-pin-error" style="color: #f87171; font-size: 0.8rem; display: none;">
+          ⚠️ Incorrect PIN. Please try again.
+        </div>
+      </div>
     </div>
   </div>
 

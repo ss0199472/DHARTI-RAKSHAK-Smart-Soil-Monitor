@@ -911,7 +911,7 @@ body::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 100000;
   opacity: 0;
   pointer-events: none;
   transition: var(--transition-normal);

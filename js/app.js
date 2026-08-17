@@ -201,6 +201,8 @@ class DhartiApp {
     const saveAllBtn = document.getElementById('btn-admin-save-all');
     const addMemberBtn = document.getElementById('btn-admin-add-member');
     const changePinBtn = document.getElementById('btn-admin-change-pin');
+    const maintLoginBtn = document.getElementById('btn-maint-login');
+    const maintPinInput = document.getElementById('maint-pin-input');
 
     const openAdminModal = () => {
       if (adminModal) adminModal.classList.add('open');
@@ -212,12 +214,35 @@ class DhartiApp {
     };
 
     if (adminBtn) adminBtn.addEventListener('click', openAdminModal);
-    if (maintAdminBtn) maintAdminBtn.addEventListener('click', openAdminModal);
 
     if (loginClose && adminModal) loginClose.addEventListener('click', () => adminModal.classList.remove('open'));
     if (dashClose && adminModal) dashClose.addEventListener('click', () => adminModal.classList.remove('open'));
 
-    // Handle Login Submit
+    // Handle Direct Maintenance Page Login
+    const handleMaintLogin = () => {
+      const pin = maintPinInput ? maintPinInput.value.trim() : "";
+      const validPin = this.systemConfig.admin_pin || "1234";
+      const errElem = document.getElementById('maint-pin-error');
+
+      if (pin === validPin) {
+        this.isAdminLoggedIn = true;
+        if (errElem) errElem.style.display = 'none';
+        if (maintPinInput) maintPinInput.value = '';
+        this.applySitePowerState();
+        openAdminModal();
+      } else {
+        if (errElem) errElem.style.display = 'block';
+      }
+    };
+
+    if (maintLoginBtn) maintLoginBtn.addEventListener('click', handleMaintLogin);
+    if (maintPinInput) {
+      maintPinInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleMaintLogin();
+      });
+    }
+
+    // Handle Modal Login Submit
     const handleLogin = () => {
       const pin = passInput ? passInput.value.trim() : "";
       const validPin = this.systemConfig.admin_pin || "1234";
