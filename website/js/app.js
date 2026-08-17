@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * DHARTI RAKSHAK - MAIN APPLICATION CONTROLLER
+ * DHARTI RAKSHAK - MAIN APPLICATION CONTROLLER (REAL DATA ONLY)
  * ============================================================================
  * Coordinates Realtime Telemetry, Sensor UI Components, Crop Matrices,
  * Live LCD Screen Emulation, Historical Logs, and CSV Exporting.
@@ -14,10 +14,12 @@ class DhartiApp {
   constructor() {
     this.rawHistory = [];
     this.lcdCycleCount = 0;
+    this.currentLatest = null;
+    this.isDeviceOnline = false;
   }
 
   init() {
-    console.log("[Dharti Rakshak] Initializing Application...");
+    console.log("[Dharti Rakshak] Initializing Application with 100% Real Firebase Stream...");
     
     // 1. Initialize Analytics Charts
     analyticsManager.initialize();
@@ -29,31 +31,103 @@ class DhartiApp {
     dataStream.initialize();
 
     dataStream.onLatest((latest) => {
-      this.updateSensorCards(latest);
-      this.updateHeroDiagnostics(latest);
-      this.updateCropSuitability(latest);
-      this.updateLcdEmulator(latest);
-      analyticsManager.updateLiveNpk(latest.nitrogen, latest.phosphorus, latest.potassium);
-      aiEngine.evaluateTelemetry(latest);
+      this.currentLatest = latest;
+      if (latest && latest.hasData) {
+        this.updateSensorCards(latest);
+        this.updateHeroDiagnostics(latest);
+        this.updateCropSuitability(latest);
+        this.updateLcdEmulator(latest);
+        analyticsManager.updateLiveNpk(latest.nitrogen, latest.phosphorus, latest.potassium);
+        aiEngine.evaluateTelemetry(latest);
+      } else {
+        this.renderOfflineState();
+      }
     });
 
     dataStream.onHistory((history) => {
-      this.rawHistory = history;
-      this.renderHistoryTable(history);
-      analyticsManager.updateFromHistory(history);
+      this.rawHistory = history || [];
+      this.renderHistoryTable(this.rawHistory);
+      analyticsManager.updateFromHistory(this.rawHistory);
     });
 
     dataStream.onStatus((status) => {
+      this.isDeviceOnline = status.online;
       this.updateDeviceStatus(status);
+      if (!status.online && !this.currentLatest) {
+        this.renderOfflineState();
+      }
     });
 
     // 4. Start LCD Display Emulator Cycle (every 3 seconds)
     setInterval(() => {
       this.lcdCycleCount++;
-      if (this.currentLatest) {
+      if (this.currentLatest && this.currentLatest.hasData) {
         this.updateLcdEmulator(this.currentLatest);
+      } else {
+        const line1 = document.getElementById('lcd-line-1');
+        const line2 = document.getElementById('lcd-line-2');
+        if (line1 && line2) {
+          line1.innerText = "DHARTI RAKSHAK  ";
+          line2.innerText = this.isDeviceOnline ? "W:OK S:CONNECT. " : "ESP32 OFFLINE   ";
+        }
       }
     }, 3000);
+  }
+
+  renderOfflineState() {
+    // Sensor Cards to placeholder
+    ['n', 'p', 'k', 'moist', 'temp', 'ph'].forEach(id => {
+      const valElem = document.getElementById(`val-${id}`);
+      const fillElem = document.getElementById(`fill-${id}`);
+      if (valElem) valElem.innerText = "--";
+      if (fillElem) fillElem.style.width = "0%";
+    });
+
+    // Diagnostics
+    const fertVal = document.getElementById('diag-fertility-val');
+    const fertSub = document.getElementById('diag-fertility-sub');
+    if (fertVal) fertVal.innerHTML = `WAITING <span class="badge-tag badge-low">No Signal</span>`;
+    if (fertSub) fertSub.innerText = "Waiting for ESP32 to connect and transmit sensor readings...";
+
+    const soilVal = document.getElementById('diag-soil-type-val');
+    const soilSub = document.getElementById('diag-soil-type-sub');
+    if (soilVal) soilVal.innerHTML = `Waiting... <span class="badge-tag badge-low">pH --</span>`;
+    if (soilSub) soilSub.innerText = "Probe disconnected or offline";
+
+    const scoreElem = document.getElementById('ai-health-badge');
+    const scoreValElem = document.getElementById('ai-health-score-val');
+    if (scoreElem) scoreElem.innerText = "-- / 100";
+    if (scoreValElem) {
+      scoreValElem.innerText = "-- / 100";
+      scoreValElem.style.color = "var(--text-dim)";
+    }
+
+    // Crop Badges
+    ['wheat', 'rice', 'maize', 'mustard'].forEach(crop => {
+      const el = document.getElementById(`badge-${crop}`);
+      if (el) {
+        el.className = "crop-badge unsuitable";
+        el.innerText = "Waiting for ESP32 ⏳";
+      }
+    });
+
+    // AI Box
+    const aiContainer = document.getElementById('ai-recommendations-container');
+    if (aiContainer) {
+      aiContainer.innerHTML = `
+        <div class="ai-recommendation-box">
+          <h4>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            Hardware Waiting State
+          </h4>
+          <p>Flash your ESP32 with <code>dharti_rakshak_firmware.ino</code> and power it on. As soon as real sensor frames arrive, Dharti AI will analyze your soil.</p>
+        </div>
+      `;
+    }
   }
 
   attachEventListeners() {
@@ -93,13 +167,12 @@ class DhartiApp {
   }
 
   updateHeroDiagnostics(data) {
-    this.currentLatest = data;
-
     // Fertility
     const fertVal = document.getElementById('diag-fertility-val');
     const fertSub = document.getElementById('diag-fertility-sub');
     if (fertVal) {
-      fertVal.innerHTML = `${data.fertility} <span class="badge-tag badge-${data.fertility.toLowerCase() === 'high' ? 'high' : (data.fertility.toLowerCase() === 'medium' ? 'med' : 'low')}">${data.totalNPK} mg/kg</span>`;
+      const badgeClass = data.fertility.toLowerCase() === 'high' ? 'high' : (data.fertility.toLowerCase() === 'medium' ? 'med' : 'low');
+      fertVal.innerHTML = `${data.fertility} <span class="badge-tag badge-${badgeClass}">${data.totalNPK} mg/kg</span>`;
     }
     if (fertSub) {
       fertSub.innerText = data.totalNPK > 250 ? 'Rich in macronutrients' : (data.totalNPK > 120 ? 'Moderate fertility balance' : 'Nutrient supplementation required');
@@ -117,15 +190,15 @@ class DhartiApp {
   }
 
   updateSensorCards(data) {
-    // 1. Nitrogen
+    // 1. Nitrogen (Target: 20 - 80 mg/kg)
     this.setCardValue('val-n', data.nitrogen, 'fill-n', (data.nitrogen / 120) * 100);
-    // 2. Phosphorus
+    // 2. Phosphorus (Target: 15 - 50 mg/kg)
     this.setCardValue('val-p', data.phosphorus, 'fill-p', (data.phosphorus / 100) * 100);
-    // 3. Potassium
+    // 3. Potassium (Target: 80 - 200 mg/kg)
     this.setCardValue('val-k', data.potassium, 'fill-k', (data.potassium / 200) * 100);
-    // 4. Moisture
+    // 4. Moisture (%)
     this.setCardValue('val-moist', data.moisture.toFixed(1), 'fill-moist', data.moisture);
-    // 5. Temperature
+    // 5. Temperature (°C)
     this.setCardValue('val-temp', data.temperature.toFixed(1), 'fill-temp', (data.temperature / 50) * 100);
     // 6. pH
     this.setCardValue('val-ph', data.ph.toFixed(2), 'fill-ph', (data.ph / 14) * 100);
@@ -143,7 +216,7 @@ class DhartiApp {
 
     // Wheat: ph >= 6.0 && ph <= 7.5 && moisture < 35
     const wheatOk = (ph >= 6.0 && ph <= 7.5 && moisture < 35.0);
-    this.setCropBadge('badge-wheat', wheatOk, wheatOk ? 'Suitable ✅' : (moisture >= 35 ? 'High Moisture ❌' : 'pH Out of Range ❌'));
+    this.setCropBadge('badge-wheat', wheatOk, wheatOk ? 'Suitable ✅' : (moisture >= 35 ? 'High Moisture (≥35%) ❌' : 'pH Out of 6.0-7.5 ❌'));
 
     // Rice: moisture > 40 && ph >= 5.5
     const riceOk = (moisture > 40.0 && ph >= 5.5);
@@ -153,8 +226,7 @@ class DhartiApp {
     const maizeOk = (nitrogen > 20 && ph >= 5.8);
     this.setCropBadge('badge-maize', maizeOk, maizeOk ? 'Suitable ✅' : (nitrogen <= 20 ? 'Low Nitrogen (≤20) ❌' : 'pH < 5.8 ❌'));
 
-    // Extended Agronomy Crops
-    // Mustard: ph 6.0 - 7.5, moisture 25 - 35
+    // Mustard: ph 6.0 - 7.5 && moisture 20 - 38
     const mustardOk = (ph >= 6.0 && ph <= 7.5 && moisture >= 20 && moisture <= 38);
     this.setCropBadge('badge-mustard', mustardOk, mustardOk ? 'Suitable ✅' : 'Moisture/pH Suboptimal ❌');
   }
@@ -199,8 +271,8 @@ class DhartiApp {
         statusText.innerText = "Node Offline";
       }
     }
-    if (ipElem) ipElem.innerText = status.ip || '192.168.1.105';
-    if (rssiElem) rssiElem.innerText = `${status.rssi || -58} dBm (Good)`;
+    if (ipElem) ipElem.innerText = status.ip;
+    if (rssiElem) rssiElem.innerText = status.rssi !== "--" ? `${status.rssi} dBm` : "--";
   }
 
   renderHistoryTable(dataList) {
@@ -208,7 +280,7 @@ class DhartiApp {
     if (!tbody) return;
 
     if (!dataList || dataList.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px;">No telemetry logs recorded yet.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--text-dim);">No telemetry logs recorded in Firebase yet. Power on your ESP32 to begin streaming.</td></tr>`;
       return;
     }
 
@@ -233,7 +305,7 @@ class DhartiApp {
 
   exportCsv() {
     if (!this.rawHistory || !this.rawHistory.length) {
-      alert("No data to export.");
+      alert("No telemetry data to export.");
       return;
     }
 

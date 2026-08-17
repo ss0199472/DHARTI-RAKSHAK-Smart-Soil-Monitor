@@ -1,13 +1,12 @@
 /**
  * ============================================================================
- * DHARTI RAKSHAK - FIREBASE CONFIGURATION & REALTIME STREAM MANAGER
+ * DHARTI RAKSHAK - FIREBASE REALTIME STREAM MANAGER (100% REAL DATA)
  * ============================================================================
- * Supports both Live Firebase Realtime Database (via v10 modular SDK or REST)
- * and an Instant Interactive Sandbox Simulation Mode if Firebase is not yet configured.
+ * Directly queries your live Firebase Realtime Database endpoint.
+ * Zero mock data: If the physical ESP32 is offline or has not uploaded yet,
+ * it accurately reports "Offline / Waiting for ESP32".
  */
 
-// User Configuration Object
-// Actual Firebase Project Configuration
 export const firebaseConfig = {
   apiKey: "AIzaSyA5iOt3TL2ZOK42c-2N-Gu9Kz1TA12-vNg",
   authDomain: "dharti-rakshak-iot-59952.firebaseapp.com",
@@ -22,189 +21,174 @@ export const ACTIVE_DEVICE_ID = "dharti-node-01";
 
 class DataStreamService {
   constructor() {
-    this.isLiveFirebase = false;
     this.listeners = {
       latest: [],
       history: [],
       status: []
     };
-    this.simulatedState = {
-      moisture: 32.4,
-      temperature: 26.8,
-      ph: 6.85,
-      nitrogen: 48,
-      phosphorus: 35,
-      potassium: 115,
-      online: true,
-      lastSeen: Date.now()
+    this.lastKnownData = null;
+    this.lastKnownStatus = {
+      online: false,
+      ip: "--",
+      rssi: "--",
+      sensorStatus: "OFFLINE",
+      firmwareVersion: "--"
     };
-    this.historyBuffer = [];
-    this.initHistoricalSeed();
   }
 
-  initHistoricalSeed() {
-    const now = Date.now();
-    for (let i = 24; i >= 0; i--) {
-      const timestamp = now - i * 3600 * 1000;
-      const variation = Math.sin(i / 3) * 2;
-      this.historyBuffer.push({
-        id: `log-${timestamp}`,
-        timestamp: timestamp,
-        moisture: +(32.0 + variation * 0.6).toFixed(1),
-        temperature: +(25.0 + variation * 0.9).toFixed(1),
-        ph: +(6.80 + Math.cos(i) * 0.05).toFixed(2),
-        nitrogen: Math.round(45 + variation),
-        phosphorus: Math.round(34 + variation * 0.5),
-        potassium: Math.round(112 + variation * 1.2),
-        totalNPK: Math.round(45 + 34 + 112 + variation * 2.7)
-      });
-    }
-  }
+  initialize() {
+    console.log("[Dharti Rakshak] Connecting to Live Firebase Database:", firebaseConfig.databaseURL);
+    
+    // Initial status broadcast: Offline until proven live
+    this.emitStatus({
+      online: false,
+      ip: "--",
+      rssi: "--",
+      sensorStatus: "OFFLINE",
+      firmwareVersion: "--"
+    });
 
-  async initialize() {
-    // Check if real Firebase credentials are provided
-    if (
-      firebaseConfig.databaseURL &&
-      !firebaseConfig.databaseURL.includes("YOUR_PROJECT_ID")
-    ) {
-      try {
-        console.log("[Dharti Rakshak] Connecting to Live Firebase Database:", firebaseConfig.databaseURL);
-        this.startFirebasePolling();
-        this.isLiveFirebase = true;
-        return;
-      } catch (err) {
-        console.warn("[Dharti Rakshak] Firebase connection error, falling back to Sandbox Simulator:", err);
-      }
-    }
-
-    console.log("[Dharti Rakshak] Running in Interactive Nature-Tech Live Simulator Mode.");
-    this.startSimulationStream();
+    // Start real polling
+    this.pollFirebase();
+    setInterval(() => this.pollFirebase(), 2500);
   }
 
   onLatest(callback) {
     this.listeners.latest.push(callback);
-    // Trigger immediately with current state
-    callback(this.getLatestFormatted());
+    if (this.lastKnownData) callback(this.lastKnownData);
   }
 
   onHistory(callback) {
     this.listeners.history.push(callback);
-    callback(this.historyBuffer);
   }
 
   onStatus(callback) {
     this.listeners.status.push(callback);
-    callback({
-      online: true,
-      ip: "192.168.1.105",
-      rssi: -58,
-      sensorStatus: "HEALTHY",
-      firmwareVersion: "2.1.0-CLOUD",
-      isLiveFirebase: this.isLiveFirebase
-    });
+    callback(this.lastKnownStatus);
   }
 
-  getLatestFormatted() {
-    const totalNPK = this.simulatedState.nitrogen + this.simulatedState.phosphorus + this.simulatedState.potassium;
-    let fertility = "LOW";
-    if (totalNPK > 250) fertility = "HIGH";
-    else if (totalNPK > 120) fertility = "MEDIUM";
-
-    let soilType = "Neutral";
-    if (this.simulatedState.ph < 1.0) soilType = "Connecting...";
-    else if (this.simulatedState.ph < 6.0) soilType = "Acidic";
-    else if (this.simulatedState.ph > 7.5) soilType = "Alkaline";
-
-    return {
-      moisture: this.simulatedState.moisture,
-      temperature: this.simulatedState.temperature,
-      ph: this.simulatedState.ph,
-      nitrogen: this.simulatedState.nitrogen,
-      phosphorus: this.simulatedState.phosphorus,
-      potassium: this.simulatedState.potassium,
-      totalNPK: totalNPK,
-      fertility: fertility,
-      soilType: soilType,
-      cropSuitability: {
-        wheat: this.simulatedState.ph >= 6.0 && this.simulatedState.ph <= 7.5 && this.simulatedState.moisture < 35.0,
-        rice: this.simulatedState.moisture > 40.0 && this.simulatedState.ph >= 5.5,
-        maize: this.simulatedState.nitrogen > 20 && this.simulatedState.ph >= 5.8
-      },
-      sensorStatus: "OK",
-      timestamp: this.simulatedState.lastSeen
-    };
+  emitStatus(statusObj) {
+    this.lastKnownStatus = statusObj;
+    this.listeners.status.forEach(cb => cb(statusObj));
   }
 
-  startSimulationStream() {
-    // Simulate real-world micro-fluctuations every 3 seconds
-    setInterval(() => {
-      const deltaMoist = (Math.random() - 0.5) * 0.4;
-      const deltaTemp  = (Math.random() - 0.5) * 0.3;
-      const deltaPh    = (Math.random() - 0.5) * 0.04;
-      const deltaN     = Math.round((Math.random() - 0.5) * 2);
+  async pollFirebase() {
+    // 1. Fetch Latest Telemetry
+    try {
+      const resLatest = await fetch(`${firebaseConfig.databaseURL}/devices/${ACTIVE_DEVICE_ID}/latest.json`);
+      if (resLatest.ok) {
+        const data = await resLatest.json();
+        if (data && typeof data === 'object' && data.moisture !== undefined) {
+          const now = Date.now();
+          const timestamp = data.timestamp || now;
+          const isFresh = (now - timestamp) < 45000;
 
-      this.simulatedState.moisture = +(Math.max(10, Math.min(80, this.simulatedState.moisture + deltaMoist))).toFixed(1);
-      this.simulatedState.temperature = +(Math.max(15, Math.min(45, this.simulatedState.temperature + deltaTemp))).toFixed(1);
-      this.simulatedState.ph = +(Math.max(4.0, Math.min(9.5, this.simulatedState.ph + deltaPh))).toFixed(2);
-      this.simulatedState.nitrogen = Math.max(10, Math.min(100, this.simulatedState.nitrogen + deltaN));
-      this.simulatedState.lastSeen = Date.now();
-
-      const latestData = this.getLatestFormatted();
-      this.listeners.latest.forEach(cb => cb(latestData));
-
-      // Append to history periodically (every 10 cycles = 30s in demo)
-      if (Math.random() > 0.7) {
-        this.historyBuffer.push({
-          id: `log-${Date.now()}`,
-          timestamp: Date.now(),
-          moisture: latestData.moisture,
-          temperature: latestData.temperature,
-          ph: latestData.ph,
-          nitrogen: latestData.nitrogen,
-          phosphorus: latestData.phosphorus,
-          potassium: latestData.potassium,
-          totalNPK: latestData.totalNPK
-        });
-        if (this.historyBuffer.length > 50) this.historyBuffer.shift();
-        this.listeners.history.forEach(cb => cb(this.historyBuffer));
-      }
-    }, 3000);
-  }
-
-  async startFirebasePolling() {
-    const fetchLatest = async () => {
-      try {
-        const res = await fetch(`${firebaseConfig.databaseURL}/devices/${ACTIVE_DEVICE_ID}/latest.json`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data) {
-            this.listeners.latest.forEach(cb => cb(data));
+          const totalNPK = (data.nitrogen || 0) + (data.phosphorus || 0) + (data.potassium || 0);
+          
+          let fertility = data.fertility;
+          if (!fertility) {
+            if (totalNPK > 250) fertility = "HIGH";
+            else if (totalNPK > 120) fertility = "MEDIUM";
+            else fertility = "LOW";
           }
-        }
-      } catch (e) {
-        console.error("Firebase latest polling error:", e);
-      }
-    };
 
-    const fetchHistory = async () => {
-      try {
-        const res = await fetch(`${firebaseConfig.databaseURL}/devices/${ACTIVE_DEVICE_ID}/readings.json?limitToLast=40`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data) {
-            const list = Object.keys(data).map(k => ({ id: k, ...data[k] }));
-            this.listeners.history.forEach(cb => cb(list));
+          let soilType = data.soilType;
+          if (!soilType) {
+            if (data.ph < 1.0) soilType = "Connecting...";
+            else if (data.ph < 6.0) soilType = "Acidic";
+            else if (data.ph > 7.5) soilType = "Alkaline";
+            else soilType = "Neutral";
           }
-        }
-      } catch (e) {
-        console.error("Firebase history polling error:", e);
-      }
-    };
 
-    fetchLatest();
-    fetchHistory();
-    setInterval(fetchLatest, 3000);
-    setInterval(fetchHistory, 30000);
+          const processed = {
+            hasData: true,
+            isFresh: isFresh,
+            moisture: Number(data.moisture) || 0,
+            temperature: Number(data.temperature) || 0,
+            ph: Number(data.ph) || 0,
+            nitrogen: Number(data.nitrogen) || 0,
+            phosphorus: Number(data.phosphorus) || 0,
+            potassium: Number(data.potassium) || 0,
+            totalNPK: totalNPK,
+            fertility: fertility,
+            soilType: soilType,
+            cropSuitability: {
+              wheat: (data.ph >= 6.0 && data.ph <= 7.5 && data.moisture < 35.0),
+              rice: (data.moisture > 40.0 && data.ph >= 5.5),
+              maize: (data.nitrogen > 20 && data.ph >= 5.8),
+              mustard: (data.ph >= 6.0 && data.ph <= 7.5 && data.moisture >= 20 && data.moisture <= 38)
+            },
+            sensorStatus: data.sensorStatus || "OK",
+            timestamp: timestamp
+          };
+
+          this.lastKnownData = processed;
+          this.listeners.latest.forEach(cb => cb(processed));
+        } else {
+          // No live data yet in Firebase
+          this.lastKnownData = null;
+          this.listeners.latest.forEach(cb => cb(null));
+        }
+      }
+    } catch (e) {
+      console.warn("[Firebase] Failed to fetch latest:", e);
+    }
+
+    // 2. Fetch Device Status
+    try {
+      const resStatus = await fetch(`${firebaseConfig.databaseURL}/devices/${ACTIVE_DEVICE_ID}/status.json`);
+      if (resStatus.ok) {
+        const statusData = await resStatus.json();
+        if (statusData && typeof statusData === 'object') {
+          const now = Date.now();
+          const lastSeen = statusData.lastSeen || 0;
+          const isAlive = (now - lastSeen) < 60000; // Heartbeat within 60s
+
+          this.emitStatus({
+            online: isAlive,
+            ip: statusData.ip || "--",
+            rssi: statusData.rssi !== undefined ? statusData.rssi : "--",
+            sensorStatus: isAlive ? (statusData.sensorStatus || "HEALTHY") : "OFFLINE",
+            firmwareVersion: statusData.firmwareVersion || "2.1.0-CLOUD"
+          });
+        } else {
+          this.emitStatus({
+            online: false,
+            ip: "--",
+            rssi: "--",
+            sensorStatus: "OFFLINE",
+            firmwareVersion: "--"
+          });
+        }
+      }
+    } catch (e) {
+      this.emitStatus({
+        online: false,
+        ip: "--",
+        rssi: "--",
+        sensorStatus: "OFFLINE",
+        firmwareVersion: "--"
+      });
+    }
+
+    // 3. Fetch Historical Readings
+    try {
+      const resHistory = await fetch(`${firebaseConfig.databaseURL}/devices/${ACTIVE_DEVICE_ID}/readings.json?limitToLast=30`);
+      if (resHistory.ok) {
+        const historyData = await resHistory.json();
+        if (historyData && typeof historyData === 'object') {
+          const list = Object.keys(historyData).map(k => ({
+            id: k,
+            ...historyData[k]
+          }));
+          this.listeners.history.forEach(cb => cb(list));
+        } else {
+          this.listeners.history.forEach(cb => cb([]));
+        }
+      }
+    } catch (e) {
+      console.warn("[Firebase] Failed to fetch history:", e);
+    }
   }
 }
 
