@@ -653,18 +653,26 @@
           </div>
         </div>
 
-        <!-- 3. Change Admin PIN -->
+        <!-- 3. Change Admin PIN (Passcode Management) -->
         <div class="admin-section-block">
           <div class="admin-section-title" style="margin-bottom: 8px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
-            Change Admin Passcode
+            Change Admin Passcode (PIN)
           </div>
-          <div style="display: flex; gap: 8px;">
-            <input type="password" id="admin-new-pin-input" class="admin-input-text" placeholder="Enter new PIN">
-            <button class="btn-header" id="btn-admin-change-pin">Update PIN</button>
+          <p style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 10px;">
+            Set a new custom PIN to protect your Admin Control Panel across all devices.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <input type="password" id="admin-current-pin-input" class="admin-input-text" placeholder="Current PIN (Default: 1234)">
+            <input type="password" id="admin-new-pin-input" class="admin-input-text" placeholder="New PIN (at least 4 characters)">
+            <input type="password" id="admin-confirm-pin-input" class="admin-input-text" placeholder="Confirm New PIN">
+            <div id="admin-pin-status-msg" style="font-size: 0.8rem; display: none; padding: 4px 0;"></div>
+            <button class="btn-header" id="btn-admin-change-pin" style="align-self: flex-start; margin-top: 4px; background: rgba(16, 185, 129, 0.2); border-color: var(--primary-mint);">
+              🔐 Update PIN in Cloud
+            </button>
           </div>
         </div>
 

@@ -270,18 +270,51 @@ class DhartiApp {
       });
     }
 
-    // Change PIN
+    // Change PIN with complete validation
     if (changePinBtn) {
-      changePinBtn.addEventListener('click', () => {
-        const pinInput = document.getElementById('admin-new-pin-input');
-        const newPin = pinInput ? pinInput.value.trim() : "";
-        if (newPin && newPin.length >= 4) {
-          this.systemConfig.admin_pin = newPin;
-          if (pinInput) pinInput.value = '';
-          alert("🔑 Admin Passcode Updated to: " + newPin);
-        } else {
-          alert("PIN must be at least 4 digits/characters.");
+      changePinBtn.addEventListener('click', async () => {
+        const curInput = document.getElementById('admin-current-pin-input');
+        const newInput = document.getElementById('admin-new-pin-input');
+        const confirmInput = document.getElementById('admin-confirm-pin-input');
+        const statusMsg = document.getElementById('admin-pin-status-msg');
+
+        const currentVal = curInput ? curInput.value.trim() : "";
+        const newVal = newInput ? newInput.value.trim() : "";
+        const confirmVal = confirmInput ? confirmInput.value.trim() : "";
+
+        const expectedPin = this.systemConfig.admin_pin || "1234";
+
+        const showStatus = (msg, isSuccess) => {
+          if (!statusMsg) return;
+          statusMsg.style.display = "block";
+          statusMsg.style.color = isSuccess ? "#34d399" : "#f87171";
+          statusMsg.innerHTML = isSuccess ? `✅ ${msg}` : `⚠️ ${msg}`;
+        };
+
+        if (currentVal !== expectedPin) {
+          showStatus("Current PIN is incorrect.", false);
+          return;
         }
+
+        if (newVal.length < 4) {
+          showStatus("New PIN must be at least 4 characters/digits.", false);
+          return;
+        }
+
+        if (newVal !== confirmVal) {
+          showStatus("New PIN and Confirm PIN do not match.", false);
+          return;
+        }
+
+        // Update PIN
+        this.systemConfig.admin_pin = newVal;
+        if (curInput) curInput.value = '';
+        if (newInput) newInput.value = '';
+        if (confirmInput) confirmInput.value = '';
+
+        showStatus("Saving new PIN to Cloud...", true);
+        await this.saveSystemConfig();
+        showStatus(`PIN successfully updated to: <strong>${newVal}</strong>`, true);
       });
     }
 
