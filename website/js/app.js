@@ -1,12 +1,13 @@
 /**
  * ============================================================================
- * DHARTI RAKSHAK - MAIN APPLICATION CONTROLLER (REAL DATA ONLY)
+ * DHARTI RAKSHAK - MAIN APPLICATION & ADMIN CONTROLLER
  * ============================================================================
  * Coordinates Realtime Telemetry, Sensor UI Components, Crop Matrices,
- * Live LCD Screen Emulation, Historical Logs, and CSV Exporting.
+ * Live LCD Screen Emulation, Historical Logs, CSV Exporting, and
+ * Full Admin Panel (Power ON/OFF, Maintenance Mode, Team Member Editor).
  */
 
-import { dataStream } from './firebase-config.js';
+import { dataStream, firebaseConfig } from './firebase-config.js';
 import { analyticsManager } from './charts.js';
 import { aiEngine } from './ai-insights.js';
 
@@ -16,18 +17,41 @@ class DhartiApp {
     this.lcdCycleCount = 0;
     this.currentLatest = null;
     this.isDeviceOnline = false;
+    this.isAdminLoggedIn = false;
+
+    // Default System & Team Configuration
+    this.systemConfig = {
+      site_online: true,
+      maintenance_msg: "The Dharti Rakshak system is currently undergoing scheduled sensor maintenance & telemetry upgrades. We will be back online shortly.",
+      show_team: true,
+      admin_pin: "1234",
+      team_members: [
+        { id: "m1", name: "Namit Kumar", visible: true },
+        { id: "m2", name: "Sanidhya Krishna Yadav", visible: true },
+        { id: "m3", name: "Yugant Dwivedi", visible: true },
+        { id: "m4", name: "Rudransh Uttam", visible: true }
+      ]
+    };
   }
 
-  init() {
-    console.log("[Dharti Rakshak] Initializing Application with 100% Real Firebase Stream...");
+  async init() {
+    console.log("[Dharti Rakshak] Initializing Application...");
     
-    // 1. Initialize Analytics Charts
+    // 1. Load Admin & Team Configuration
+    await this.loadSystemConfig();
+
+    // 2. Initialize Analytics Charts
     analyticsManager.initialize();
 
-    // 2. Attach Event Handlers
+    // 3. Attach Event Handlers (Admin + UI)
     this.attachEventListeners();
+    this.attachAdminEventListeners();
 
-    // 3. Connect Realtime Data Stream
+    // 4. Render Initial Team and System State
+    this.renderTeamSection();
+    this.applySitePowerState();
+
+    // 5. Connect Realtime Data Stream
     dataStream.initialize();
 
     dataStream.onLatest((latest) => {
@@ -58,7 +82,7 @@ class DhartiApp {
       }
     });
 
-    // 4. Start LCD Display Emulator Cycle (every 3 seconds)
+    // 6. Start LCD Display Emulator Cycle (every 3 seconds)
     setInterval(() => {
       this.lcdCycleCount++;
       if (this.currentLatest && this.currentLatest.hasData) {
@@ -74,8 +98,285 @@ class DhartiApp {
     }, 3000);
   }
 
+  // ==========================================================================
+  // SYSTEM & ADMIN CONFIGURATION PERSISTENCE
+  // ==========================================================================
+  async loadSystemConfig() {
+    // 1. Try Loading from LocalStorage first for instant render
+    const cached = localStorage.getItem('dharti_system_config');
+    if (cached) {
+      try {
+        this.systemConfig = JSON.parse(cached);
+      } catch (e) {}
+    }
+
+    // 2. Fetch from Firebase Realtime Database
+    try {
+      const res = await fetch(`${firebaseConfig.databaseURL}/system_config.json`);
+      if (res.ok) {
+        const cloudConfig = await res.json();
+        if (cloudConfig && typeof cloudConfig === 'object') {
+          this.systemConfig = {
+            ...this.systemConfig,
+            ...cloudConfig
+          };
+          localStorage.setItem('dharti_system_config', JSON.stringify(this.systemConfig));
+        }
+      }
+    } catch (err) {
+      console.warn("[Admin] Cloud config fetch notice:", err);
+    }
+  }
+
+  async saveSystemConfig() {
+    // Cache locally
+    localStorage.setItem('dharti_system_config', JSON.stringify(this.systemConfig));
+
+    // Upload to Firebase Realtime Database
+    try {
+      await fetch(`${firebaseConfig.databaseURL}/system_config.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(this.systemConfig)
+      });
+      console.log("[Admin] Config successfully synced to Firebase Cloud.");
+    } catch (e) {
+      console.error("[Admin] Firebase config sync error:", e);
+    }
+
+    // Re-apply to UI
+    this.renderTeamSection();
+    this.applySitePowerState();
+    alert("✅ Admin Settings Saved & Synced Successfully!");
+  }
+
+  applySitePowerState() {
+    const overlay = document.getElementById('maintenance-overlay');
+    const msgElem = document.getElementById('maintenance-display-msg');
+
+    if (msgElem && this.systemConfig.maintenance_msg) {
+      msgElem.innerText = this.systemConfig.maintenance_msg;
+    }
+
+    if (overlay) {
+      if (this.systemConfig.site_online === false && !this.isAdminLoggedIn) {
+        overlay.classList.add('active');
+      } else {
+        overlay.classList.remove('active');
+      }
+    }
+  }
+
+  renderTeamSection() {
+    const container = document.getElementById('team-attribution-container');
+    const list = document.getElementById('team-member-list');
+
+    if (!container || !list) return;
+
+    if (!this.systemConfig.show_team) {
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = 'block';
+    const visibleMembers = (this.systemConfig.team_members || []).filter(m => m.visible !== false);
+    
+    list.innerHTML = visibleMembers.map(m => `
+      <li class="team-member">${m.name}</li>
+    `).join('');
+  }
+
+  // ==========================================================================
+  // ADMIN PANEL CONTROLLER
+  // ==========================================================================
+  attachAdminEventListeners() {
+    const adminBtn = document.getElementById('btn-admin-modal');
+    const maintAdminBtn = document.getElementById('btn-maintenance-admin');
+    const adminModal = document.getElementById('admin-modal');
+    const loginClose = document.getElementById('admin-login-close');
+    const dashClose = document.getElementById('admin-dash-close');
+    const loginSubmit = document.getElementById('btn-admin-login-submit');
+    const passInput = document.getElementById('admin-passcode-input');
+    const logoutBtn = document.getElementById('btn-admin-logout');
+    const saveAllBtn = document.getElementById('btn-admin-save-all');
+    const addMemberBtn = document.getElementById('btn-admin-add-member');
+    const changePinBtn = document.getElementById('btn-admin-change-pin');
+
+    const openAdminModal = () => {
+      if (adminModal) adminModal.classList.add('open');
+      if (this.isAdminLoggedIn) {
+        this.showAdminDashboard();
+      } else {
+        this.showAdminLogin();
+      }
+    };
+
+    if (adminBtn) adminBtn.addEventListener('click', openAdminModal);
+    if (maintAdminBtn) maintAdminBtn.addEventListener('click', openAdminModal);
+
+    if (loginClose && adminModal) loginClose.addEventListener('click', () => adminModal.classList.remove('open'));
+    if (dashClose && adminModal) dashClose.addEventListener('click', () => adminModal.classList.remove('open'));
+
+    // Handle Login Submit
+    const handleLogin = () => {
+      const pin = passInput ? passInput.value.trim() : "";
+      const validPin = this.systemConfig.admin_pin || "1234";
+
+      if (pin === validPin) {
+        this.isAdminLoggedIn = true;
+        const errElem = document.getElementById('admin-login-error');
+        if (errElem) errElem.style.display = 'none';
+        if (passInput) passInput.value = '';
+        this.applySitePowerState();
+        this.showAdminDashboard();
+      } else {
+        const errElem = document.getElementById('admin-login-error');
+        if (errElem) errElem.style.display = 'block';
+      }
+    };
+
+    if (loginSubmit) loginSubmit.addEventListener('click', handleLogin);
+    if (passInput) {
+      passInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLogin();
+      });
+    }
+
+    // Logout
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        this.isAdminLoggedIn = false;
+        this.applySitePowerState();
+        this.showAdminLogin();
+        if (adminModal) adminModal.classList.remove('open');
+      });
+    }
+
+    // Add Member
+    if (addMemberBtn) {
+      addMemberBtn.addEventListener('click', () => {
+        const input = document.getElementById('admin-new-member-input');
+        const name = input ? input.value.trim() : "";
+        if (name) {
+          if (!this.systemConfig.team_members) this.systemConfig.team_members = [];
+          this.systemConfig.team_members.push({
+            id: `m_${Date.now()}`,
+            name: name,
+            visible: true
+          });
+          if (input) input.value = '';
+          this.populateAdminTeamList();
+        }
+      });
+    }
+
+    // Change PIN
+    if (changePinBtn) {
+      changePinBtn.addEventListener('click', () => {
+        const pinInput = document.getElementById('admin-new-pin-input');
+        const newPin = pinInput ? pinInput.value.trim() : "";
+        if (newPin && newPin.length >= 4) {
+          this.systemConfig.admin_pin = newPin;
+          if (pinInput) pinInput.value = '';
+          alert("🔑 Admin Passcode Updated to: " + newPin);
+        } else {
+          alert("PIN must be at least 4 digits/characters.");
+        }
+      });
+    }
+
+    // Save All
+    if (saveAllBtn) {
+      saveAllBtn.addEventListener('click', () => {
+        // Collect current switch states
+        const siteOnlineToggle = document.getElementById('admin-toggle-site-online');
+        const showTeamToggle = document.getElementById('admin-toggle-show-team');
+        const maintMsgInput = document.getElementById('admin-maintenance-msg-input');
+
+        if (siteOnlineToggle) this.systemConfig.site_online = siteOnlineToggle.checked;
+        if (showTeamToggle) this.systemConfig.show_team = showTeamToggle.checked;
+        if (maintMsgInput) this.systemConfig.maintenance_msg = maintMsgInput.value.trim();
+
+        this.saveSystemConfig();
+      });
+    }
+  }
+
+  showAdminLogin() {
+    const loginScreen = document.getElementById('admin-login-screen');
+    const dashScreen = document.getElementById('admin-dashboard-screen');
+    if (loginScreen) loginScreen.style.display = 'block';
+    if (dashScreen) dashScreen.style.display = 'none';
+  }
+
+  showAdminDashboard() {
+    const loginScreen = document.getElementById('admin-login-screen');
+    const dashScreen = document.getElementById('admin-dashboard-screen');
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (dashScreen) dashScreen.style.display = 'block';
+
+    // Populate current values
+    const siteOnlineToggle = document.getElementById('admin-toggle-site-online');
+    const showTeamToggle = document.getElementById('admin-toggle-show-team');
+    const maintMsgInput = document.getElementById('admin-maintenance-msg-input');
+
+    if (siteOnlineToggle) siteOnlineToggle.checked = (this.systemConfig.site_online !== false);
+    if (showTeamToggle) showTeamToggle.checked = (this.systemConfig.show_team !== false);
+    if (maintMsgInput) maintMsgInput.value = this.systemConfig.maintenance_msg || "";
+
+    this.populateAdminTeamList();
+  }
+
+  populateAdminTeamList() {
+    const container = document.getElementById('admin-team-manage-list');
+    if (!container) return;
+
+    const members = this.systemConfig.team_members || [];
+    if (members.length === 0) {
+      container.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-dim); padding: 8px;">No team members added yet.</div>`;
+      return;
+    }
+
+    container.innerHTML = members.map((m, index) => `
+      <div class="team-manage-item ${m.visible ? '' : 'hidden-member'}">
+        <input type="text" class="admin-input-text" value="${m.name}" style="padding: 4px 8px; font-size: 0.82rem;" onchange="window.updateMemberName(${index}, this.value)">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button class="btn-icon-action" onclick="window.toggleMemberVisibility(${index})" title="${m.visible ? 'Hide Member' : 'Show Member'}">
+            ${m.visible ? '👁️' : '🙈'}
+          </button>
+          <button class="btn-icon-action btn-icon-danger" onclick="window.deleteMember(${index})" title="Delete Member">
+            🗑️
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    // Global helper bindings for onclick handlers
+    window.updateMemberName = (idx, newName) => {
+      if (this.systemConfig.team_members[idx]) {
+        this.systemConfig.team_members[idx].name = newName;
+      }
+    };
+
+    window.toggleMemberVisibility = (idx) => {
+      if (this.systemConfig.team_members[idx]) {
+        this.systemConfig.team_members[idx].visible = !this.systemConfig.team_members[idx].visible;
+        this.populateAdminTeamList();
+      }
+    };
+
+    window.deleteMember = (idx) => {
+      if (confirm(`Remove ${this.systemConfig.team_members[idx].name}?`)) {
+        this.systemConfig.team_members.splice(idx, 1);
+        this.populateAdminTeamList();
+      }
+    };
+  }
+
+  // ==========================================================================
+  // SENSOR TELEMETRY & UI COMPONENTS
+  // ==========================================================================
   renderOfflineState() {
-    // Sensor Cards to placeholder
     ['n', 'p', 'k', 'moist', 'temp', 'ph'].forEach(id => {
       const valElem = document.getElementById(`val-${id}`);
       const fillElem = document.getElementById(`fill-${id}`);
@@ -83,7 +384,6 @@ class DhartiApp {
       if (fillElem) fillElem.style.width = "0%";
     });
 
-    // Diagnostics
     const fertVal = document.getElementById('diag-fertility-val');
     const fertSub = document.getElementById('diag-fertility-sub');
     if (fertVal) fertVal.innerHTML = `WAITING <span class="badge-tag badge-low">No Signal</span>`;
@@ -102,7 +402,6 @@ class DhartiApp {
       scoreValElem.style.color = "var(--text-dim)";
     }
 
-    // Crop Badges
     ['wheat', 'rice', 'maize', 'mustard'].forEach(crop => {
       const el = document.getElementById(`badge-${crop}`);
       if (el) {
@@ -111,7 +410,6 @@ class DhartiApp {
       }
     });
 
-    // AI Box
     const aiContainer = document.getElementById('ai-recommendations-container');
     if (aiContainer) {
       aiContainer.innerHTML = `
@@ -131,7 +429,6 @@ class DhartiApp {
   }
 
   attachEventListeners() {
-    // Search / Filter Historical Table
     const searchInput = document.getElementById('history-search');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
@@ -147,13 +444,11 @@ class DhartiApp {
       });
     }
 
-    // Export to CSV Button
     const exportBtn = document.getElementById('btn-export-csv');
     if (exportBtn) {
       exportBtn.addEventListener('click', () => this.exportCsv());
     }
 
-    // Firebase Config Modal Trigger
     const configBtn = document.getElementById('btn-config-modal');
     const modalBackdrop = document.getElementById('config-modal');
     const modalClose = document.getElementById('modal-close-btn');
@@ -167,7 +462,6 @@ class DhartiApp {
   }
 
   updateHeroDiagnostics(data) {
-    // Fertility
     const fertVal = document.getElementById('diag-fertility-val');
     const fertSub = document.getElementById('diag-fertility-sub');
     if (fertVal) {
@@ -178,7 +472,6 @@ class DhartiApp {
       fertSub.innerText = data.totalNPK > 250 ? 'Rich in macronutrients' : (data.totalNPK > 120 ? 'Moderate fertility balance' : 'Nutrient supplementation required');
     }
 
-    // Soil Type & Reaction
     const soilVal = document.getElementById('diag-soil-type-val');
     const soilSub = document.getElementById('diag-soil-type-sub');
     if (soilVal) {
@@ -190,17 +483,11 @@ class DhartiApp {
   }
 
   updateSensorCards(data) {
-    // 1. Nitrogen (Target: 20 - 80 mg/kg)
     this.setCardValue('val-n', data.nitrogen, 'fill-n', (data.nitrogen / 120) * 100);
-    // 2. Phosphorus (Target: 15 - 50 mg/kg)
     this.setCardValue('val-p', data.phosphorus, 'fill-p', (data.phosphorus / 100) * 100);
-    // 3. Potassium (Target: 80 - 200 mg/kg)
     this.setCardValue('val-k', data.potassium, 'fill-k', (data.potassium / 200) * 100);
-    // 4. Moisture (%)
     this.setCardValue('val-moist', data.moisture.toFixed(1), 'fill-moist', data.moisture);
-    // 5. Temperature (°C)
     this.setCardValue('val-temp', data.temperature.toFixed(1), 'fill-temp', (data.temperature / 50) * 100);
-    // 6. pH
     this.setCardValue('val-ph', data.ph.toFixed(2), 'fill-ph', (data.ph / 14) * 100);
   }
 
@@ -214,19 +501,15 @@ class DhartiApp {
   updateCropSuitability(data) {
     const { moisture, ph, nitrogen } = data;
 
-    // Wheat: ph >= 6.0 && ph <= 7.5 && moisture < 35
     const wheatOk = (ph >= 6.0 && ph <= 7.5 && moisture < 35.0);
     this.setCropBadge('badge-wheat', wheatOk, wheatOk ? 'Suitable ✅' : (moisture >= 35 ? 'High Moisture (≥35%) ❌' : 'pH Out of 6.0-7.5 ❌'));
 
-    // Rice: moisture > 40 && ph >= 5.5
     const riceOk = (moisture > 40.0 && ph >= 5.5);
     this.setCropBadge('badge-rice', riceOk, riceOk ? 'Suitable ✅' : (moisture <= 40 ? 'Needs >40% Moisture ❌' : 'pH < 5.5 ❌'));
 
-    // Maize: nitrogen > 20 && ph >= 5.8
     const maizeOk = (nitrogen > 20 && ph >= 5.8);
     this.setCropBadge('badge-maize', maizeOk, maizeOk ? 'Suitable ✅' : (nitrogen <= 20 ? 'Low Nitrogen (≤20) ❌' : 'pH < 5.8 ❌'));
 
-    // Mustard: ph 6.0 - 7.5 && moisture 20 - 38
     const mustardOk = (ph >= 6.0 && ph <= 7.5 && moisture >= 20 && moisture <= 38);
     this.setCropBadge('badge-mustard', mustardOk, mustardOk ? 'Suitable ✅' : 'Moisture/pH Suboptimal ❌');
   }

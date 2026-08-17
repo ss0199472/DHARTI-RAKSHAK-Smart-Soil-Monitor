@@ -42,8 +42,16 @@
       <div class="header-controls">
         <div class="status-pill" id="system-status-pill">
           <span class="status-pulse"></span>
-          <span id="system-status-text">Node Online</span>
+          <span id="system-status-text">Node Offline</span>
         </div>
+
+        <button class="btn-header" id="btn-admin-modal" title="Admin Control Panel">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          Admin Panel
+        </button>
 
         <button class="btn-header" id="btn-config-modal" title="Cloud & Firebase Settings">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -65,9 +73,9 @@
         <div class="diag-details">
           <div class="diag-title">Overall Fertility</div>
           <div class="diag-value" id="diag-fertility-val">
-            MEDIUM <span class="badge-tag badge-med">198 mg/kg</span>
+            WAITING <span class="badge-tag badge-low">No Signal</span>
           </div>
-          <div class="diag-subtitle" id="diag-fertility-sub">Moderate macronutrient balance</div>
+          <div class="diag-subtitle" id="diag-fertility-sub">Waiting for ESP32 to connect and transmit sensor readings...</div>
         </div>
       </div>
 
@@ -77,9 +85,9 @@
         <div class="diag-details">
           <div class="diag-title">Soil Classification</div>
           <div class="diag-value" id="diag-soil-type-val">
-            Neutral <span class="badge-tag badge-high">pH 6.85</span>
+            Waiting... <span class="badge-tag badge-low">pH --</span>
           </div>
-          <div class="diag-subtitle" id="diag-soil-type-sub">Prime biological assimilation range</div>
+          <div class="diag-subtitle" id="diag-soil-type-sub">Probe disconnected or offline</div>
         </div>
       </div>
 
@@ -88,10 +96,10 @@
         <div class="diag-icon">&#9733;</div>
         <div class="diag-details">
           <div class="diag-title">Dharti Soil Health Index</div>
-          <div class="diag-value" id="ai-health-score-val" style="color: #34d399;">
-            92/100
+          <div class="diag-value" id="ai-health-score-val" style="color: var(--text-dim);">
+            -- / 100
           </div>
-          <div class="diag-subtitle">Optimal moisture and nutrient retention</div>
+          <div class="diag-subtitle">Awaiting live soil analysis</div>
         </div>
       </div>
     </section>
@@ -114,15 +122,15 @@
       <div class="sensor-card card-nitro" id="card-nitrogen">
         <div class="sensor-card-top">
           <div class="sensor-symbol">N</div>
-          <span class="sensor-state-badge">Optimal</span>
+          <span class="sensor-state-badge">Realtime</span>
         </div>
         <div class="sensor-name">Nitrogen Concentration</div>
         <div class="sensor-value-box">
-          <span class="sensor-value" id="val-n">48</span>
+          <span class="sensor-value" id="val-n">--</span>
           <span class="sensor-unit">mg/kg</span>
         </div>
         <div class="sensor-meter">
-          <div class="sensor-meter-fill" id="fill-n" style="width: 45%;"></div>
+          <div class="sensor-meter-fill" id="fill-n" style="width: 0%;"></div>
         </div>
         <div class="sensor-footer">
           <span>Target: 20 - 80 mg/kg</span>
@@ -134,15 +142,15 @@
       <div class="sensor-card card-phos" id="card-phosphorus">
         <div class="sensor-card-top">
           <div class="sensor-symbol">P</div>
-          <span class="sensor-state-badge">Optimal</span>
+          <span class="sensor-state-badge">Realtime</span>
         </div>
         <div class="sensor-name">Phosphorus Concentration</div>
         <div class="sensor-value-box">
-          <span class="sensor-value" id="val-p">35</span>
+          <span class="sensor-value" id="val-p">--</span>
           <span class="sensor-unit">mg/kg</span>
         </div>
         <div class="sensor-meter">
-          <div class="sensor-meter-fill" id="fill-p" style="width: 50%;"></div>
+          <div class="sensor-meter-fill" id="fill-p" style="width: 0%;"></div>
         </div>
         <div class="sensor-footer">
           <span>Target: 15 - 50 mg/kg</span>
@@ -154,15 +162,15 @@
       <div class="sensor-card card-potas" id="card-potassium">
         <div class="sensor-card-top">
           <div class="sensor-symbol">K</div>
-          <span class="sensor-state-badge">High</span>
+          <span class="sensor-state-badge">Realtime</span>
         </div>
         <div class="sensor-name">Potassium Concentration</div>
         <div class="sensor-value-box">
-          <span class="sensor-value" id="val-k">115</span>
+          <span class="sensor-value" id="val-k">--</span>
           <span class="sensor-unit">mg/kg</span>
         </div>
         <div class="sensor-meter">
-          <div class="sensor-meter-fill" id="fill-k" style="width: 65%;"></div>
+          <div class="sensor-meter-fill" id="fill-k" style="width: 0%;"></div>
         </div>
         <div class="sensor-footer">
           <span>Target: 80 - 200 mg/kg</span>
@@ -174,15 +182,15 @@
       <div class="sensor-card card-moist" id="card-moisture">
         <div class="sensor-card-top">
           <div class="sensor-symbol">&#128167;</div>
-          <span class="sensor-state-badge">Balanced</span>
+          <span class="sensor-state-badge">Realtime</span>
         </div>
         <div class="sensor-name">Soil Moisture</div>
         <div class="sensor-value-box">
-          <span class="sensor-value" id="val-moist">32.4</span>
+          <span class="sensor-value" id="val-moist">--</span>
           <span class="sensor-unit">%</span>
         </div>
         <div class="sensor-meter">
-          <div class="sensor-meter-fill" id="fill-moist" style="width: 32%;"></div>
+          <div class="sensor-meter-fill" id="fill-moist" style="width: 0%;"></div>
         </div>
         <div class="sensor-footer">
           <span>Ideal: 25 - 45 %</span>
@@ -194,15 +202,15 @@
       <div class="sensor-card card-temp" id="card-temperature">
         <div class="sensor-card-top">
           <div class="sensor-symbol">&#127777;</div>
-          <span class="sensor-state-badge">Normal</span>
+          <span class="sensor-state-badge">Realtime</span>
         </div>
         <div class="sensor-name">Soil Temperature</div>
         <div class="sensor-value-box">
-          <span class="sensor-value" id="val-temp">26.8</span>
+          <span class="sensor-value" id="val-temp">--</span>
           <span class="sensor-unit">&deg;C</span>
         </div>
         <div class="sensor-meter">
-          <div class="sensor-meter-fill" id="fill-temp" style="width: 53%;"></div>
+          <div class="sensor-meter-fill" id="fill-temp" style="width: 0%;"></div>
         </div>
         <div class="sensor-footer">
           <span>Ambient: 15 - 35 °C</span>
@@ -214,15 +222,15 @@
       <div class="sensor-card card-ph" id="card-ph">
         <div class="sensor-card-top">
           <div class="sensor-symbol">pH</div>
-          <span class="sensor-state-badge">Neutral</span>
+          <span class="sensor-state-badge">Realtime</span>
         </div>
         <div class="sensor-name">Soil Acidity / pH</div>
         <div class="sensor-value-box">
-          <span class="sensor-value" id="val-ph">6.85</span>
+          <span class="sensor-value" id="val-ph">--</span>
           <span class="sensor-unit">pH</span>
         </div>
         <div class="sensor-meter">
-          <div class="sensor-meter-fill" id="fill-ph" style="width: 49%;"></div>
+          <div class="sensor-meter-fill" id="fill-ph" style="width: 0%;"></div>
         </div>
         <div class="sensor-footer">
           <span>Neutral: 6.0 - 7.5</span>
@@ -257,7 +265,7 @@
                 <div class="crop-rule">Rule: pH 6.0 - 7.5 &bull; Moisture &lt; 35%</div>
               </div>
             </div>
-            <div class="crop-badge suitable" id="badge-wheat">Suitable &#9989;</div>
+            <div class="crop-badge unsuitable" id="badge-wheat">Waiting for ESP32 ⏳</div>
           </div>
 
           <!-- Rice -->
@@ -269,7 +277,7 @@
                 <div class="crop-rule">Rule: Moisture &gt; 40% &bull; pH &ge; 5.5</div>
               </div>
             </div>
-            <div class="crop-badge unsuitable" id="badge-rice">Not Suitable &#10060;</div>
+            <div class="crop-badge unsuitable" id="badge-rice">Waiting for ESP32 ⏳</div>
           </div>
 
           <!-- Maize -->
@@ -281,7 +289,7 @@
                 <div class="crop-rule">Rule: Nitrogen &gt; 20 mg/kg &bull; pH &ge; 5.8</div>
               </div>
             </div>
-            <div class="crop-badge suitable" id="badge-maize">Suitable &#9989;</div>
+            <div class="crop-badge unsuitable" id="badge-maize">Waiting for ESP32 ⏳</div>
           </div>
 
           <!-- Mustard -->
@@ -293,7 +301,7 @@
                 <div class="crop-rule">Rule: pH 6.0 - 7.5 &bull; Moderate Moisture</div>
               </div>
             </div>
-            <div class="crop-badge suitable" id="badge-mustard">Suitable &#9989;</div>
+            <div class="crop-badge unsuitable" id="badge-mustard">Waiting for ESP32 ⏳</div>
           </div>
         </div>
       </div>
@@ -309,24 +317,25 @@
             </svg>
             Dharti AI Earth Intelligence
           </div>
-          <span class="ai-badge">AI Active</span>
+          <span class="ai-badge">AI Ready</span>
         </div>
 
         <div class="ai-health-meter-container">
           <span class="ai-health-title">Computed Soil Fertility Health Index</span>
-          <span class="ai-health-score" id="ai-health-badge">92 / 100</span>
+          <span class="ai-health-score" id="ai-health-badge">-- / 100</span>
         </div>
 
         <div id="ai-recommendations-container">
-          <!-- Populated dynamically via ai-insights.js -->
           <div class="ai-recommendation-box">
             <h4>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
-              Optimal Soil pH Balance
+              Hardware Waiting State
             </h4>
-            <p>Soil pH is in the optimal agronomic range (6.85). Micronutrient uptake capacity is maximum.</p>
+            <p>Flash your ESP32 with <code>dharti_rakshak_firmware.ino</code> and power it on. As soon as real sensor frames arrive, Dharti AI will analyze your soil.</p>
           </div>
         </div>
       </div>
@@ -444,8 +453,8 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.82rem;">
           <div><strong style="color: var(--text-dim);">Device ID:</strong> <span id="stat-node-id">dharti-node-01</span></div>
           <div><strong style="color: var(--text-dim);">Firmware:</strong> <span>2.1.0-CLOUD</span></div>
-          <div><strong style="color: var(--text-dim);">IP Address:</strong> <span id="stat-ip-val">192.168.1.105</span></div>
-          <div><strong style="color: var(--text-dim);">Wi-Fi RSSI:</strong> <span id="stat-rssi-val">-58 dBm (Good)</span></div>
+          <div><strong style="color: var(--text-dim);">IP Address:</strong> <span id="stat-ip-val">--</span></div>
+          <div><strong style="color: var(--text-dim);">Wi-Fi RSSI:</strong> <span id="stat-rssi-val">--</span></div>
           <div><strong style="color: var(--text-dim);">Modbus Bus:</strong> <span>GPIO 16/17 (9600 8N1)</span></div>
           <div><strong style="color: var(--text-dim);">Direction Pin:</strong> <span>GPIO 4 (RE/DE)</span></div>
         </div>
@@ -467,7 +476,7 @@
 
         <div class="lcd-box">
           <div class="lcd-line" id="lcd-line-1">DHARTI RAKSHAK  </div>
-          <div class="lcd-line" id="lcd-line-2">W:OK S:OK C:OK  </div>
+          <div class="lcd-line" id="lcd-line-2">ESP32 OFFLINE   </div>
         </div>
       </div>
     </div>
@@ -479,15 +488,18 @@
       <div>
         <strong>DHARTI RAKSHAK</strong> &bull; Technology for Protecting the Earth
       </div>
-      <div style="margin-top: 6px; color: var(--text-dim);">
-        Developed by <strong>Royal Challenger Kanpur</strong>
+      <div id="team-attribution-container">
+        <div style="margin-top: 6px; color: var(--text-dim);">
+          Developed by <strong>Royal Challenger Kanpur</strong>
+        </div>
+        <ul class="team-list" id="team-member-list">
+          <!-- Dynamically populated from admin settings -->
+          <li class="team-member">Namit Kumar</li>
+          <li class="team-member">Sanidhya Krishna Yadav</li>
+          <li class="team-member">Yugant Dwivedi</li>
+          <li class="team-member">Rudransh Uttam</li>
+        </ul>
       </div>
-      <ul class="team-list">
-        <li class="team-member">Namit Kumar</li>
-        <li class="team-member">Sanidhya Krishna Yadav</li>
-        <li class="team-member">Yugant Dwivedi</li>
-        <li class="team-member">Rudransh Uttam</li>
-      </ul>
       <div style="margin-top: 14px; font-size: 0.75rem; color: var(--text-dim);">
         Cloudflare Pages &bull; Firebase Realtime Database &bull; Modbus RTU RS-485
       </div>
@@ -502,6 +514,173 @@
       </div>
     </footer>
 
+  </div>
+
+  <!-- ====================================================================
+       MAINTENANCE MODE OVERLAY (Activated when website is turned OFF)
+       ==================================================================== -->
+  <div class="maintenance-overlay" id="maintenance-overlay">
+    <div class="maintenance-card">
+      <div style="font-size: 3rem; margin-bottom: 12px;">🌿</div>
+      <h2 style="font-family: var(--font-display); font-size: 1.8rem; color: var(--primary-mint); margin-bottom: 10px;">
+        DHARTI RAKSHAK
+      </h2>
+      <p style="font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px;">
+        Technology for Protecting the Earth
+      </p>
+      <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 16px 20px; border-radius: var(--radius-md); color: #fbbf24; font-size: 0.92rem; margin-bottom: 24px; line-height: 1.6;" id="maintenance-display-msg">
+        The Dharti Rakshak system is currently undergoing scheduled sensor maintenance & telemetry upgrades. We will be back online shortly.
+      </div>
+      <button class="btn-header" id="btn-maintenance-admin" style="background: rgba(16, 185, 129, 0.15); border-color: var(--primary-mint);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        Admin Login to Resume Service
+      </button>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       ADMIN CONTROL PANEL MODAL
+       ==================================================================== -->
+  <div class="modal-backdrop" id="admin-modal">
+    <div class="modal-card admin-card-large">
+      
+      <!-- Screen 1: Admin Passcode Login -->
+      <div id="admin-login-screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+          <h3 style="color: var(--primary-mint); font-size: 1.3rem; display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Admin Authentication
+          </h3>
+          <button class="modal-close-trigger" id="admin-login-close" style="background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1.5rem;">&times;</button>
+        </div>
+
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">
+          Enter your Admin Passcode to manage website power status and team visibility.
+        </p>
+
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;">Admin Passcode</label>
+          <input type="password" id="admin-passcode-input" class="admin-input-text" placeholder="Enter PIN (Default: 1234)">
+        </div>
+
+        <div id="admin-login-error" style="color: #f87171; font-size: 0.8rem; margin-bottom: 14px; display: none;">
+          ⚠️ Incorrect Passcode. Please try again.
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.75rem; color: var(--text-dim);">Default PIN: <code style="color: #34d399;">1234</code></span>
+          <button class="btn-header" id="btn-admin-login-submit" style="background: var(--primary-emerald); color: var(--text-inverse);">
+            Unlock Panel
+          </button>
+        </div>
+      </div>
+
+      <!-- Screen 2: Admin Dashboard Panel -->
+      <div id="admin-dashboard-screen" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle);">
+          <h3 style="color: var(--primary-mint); font-size: 1.3rem; display: flex; align-items: center; gap: 8px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            Dharti Rakshak Admin Suite
+          </h3>
+          <button class="modal-close-trigger" id="admin-dash-close" style="background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1.5rem;">&times;</button>
+        </div>
+
+        <!-- 1. Master Website Power Switch -->
+        <div class="admin-section-block">
+          <div class="admin-section-header">
+            <div class="admin-section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                <line x1="12" y1="2" x2="12" y2="12"></line>
+              </svg>
+              Website Power State
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="admin-toggle-site-online" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 10px;">
+            Turn website <strong>ON</strong> (Public Live) or <strong>OFF</strong> (Maintenance Mode).
+          </p>
+          <div style="margin-top: 10px;">
+            <label style="display: block; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px;">Custom Maintenance Message</label>
+            <input type="text" id="admin-maintenance-msg-input" class="admin-input-text" value="The Dharti Rakshak system is currently undergoing scheduled sensor maintenance & telemetry upgrades. We will be back online shortly.">
+          </div>
+        </div>
+
+        <!-- 2. Team Section Master Switch & Member Management -->
+        <div class="admin-section-block">
+          <div class="admin-section-header">
+            <div class="admin-section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Team Section Visibility & Members
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="admin-toggle-show-team" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 12px;">
+            Toggle the entire team section ON/OFF or customize individual member names & visibility.
+          </p>
+
+          <!-- Manage Members List -->
+          <div class="team-manage-list" id="admin-team-manage-list">
+            <!-- Dynamically populated -->
+          </div>
+
+          <!-- Add Member Input -->
+          <div style="display: flex; gap: 8px; margin-top: 12px;">
+            <input type="text" id="admin-new-member-input" class="admin-input-text" placeholder="Add new member name..." style="flex: 1;">
+            <button class="btn-header" id="btn-admin-add-member" style="background: rgba(16, 185, 129, 0.2); border-color: var(--primary-mint);">
+              + Add
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Change Admin PIN -->
+        <div class="admin-section-block">
+          <div class="admin-section-title" style="margin-bottom: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Change Admin Passcode
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="password" id="admin-new-pin-input" class="admin-input-text" placeholder="Enter new PIN">
+            <button class="btn-header" id="btn-admin-change-pin">Update PIN</button>
+          </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
+          <button class="btn-header" id="btn-admin-logout" style="color: var(--accent-rose); border-color: rgba(244, 63, 94, 0.3);">
+            Log Out
+          </button>
+          <button class="btn-header" id="btn-admin-save-all" style="background: var(--primary-emerald); color: var(--text-inverse); font-weight: 700; padding: 10px 24px;">
+            💾 Save & Apply Changes
+          </button>
+        </div>
+
+      </div>
+
+    </div>
   </div>
 
   <!-- ====================================================================
