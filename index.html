@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dharti Rakshak — Industrial IoT Smart Soil Monitoring Platform</title>
+  <meta name="description" content="Dharti Rakshak (Technology for Protecting the Earth) - Real-time industrial Modbus RS-485 soil nutrient, moisture, pH, and environmental intelligence platform.">
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Design System Styles -->
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- ====================================================================
+         HEADER / BRAND NAVIGATION BAR
+         ==================================================================== -->
+    <header class="header-bar" id="main-header">
+      <div class="brand-section">
+        <div class="brand-logo-icon" aria-label="Dharti Rakshak Emblem">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"/>
+            <path d="M7 14.5c2.5-1 4.5-3 5-6.5 1.5 2 3.5 3.5 5 4"/>
+            <path d="M12 8v12"/>
+          </svg>
+        </div>
+        <div class="brand-title-group">
+          <h1>DHARTI <span class="highlight">RAKSHAK</span> &#127793;</h1>
+          <p>Technology for Protecting the Earth &bull; Field Telemetry</p>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <div class="status-pill" id="system-status-pill">
+          <span class="status-pulse"></span>
+          <span id="system-status-text">Node Online</span>
+        </div>
+
+        <button class="btn-header" id="btn-config-modal" title="Cloud & Firebase Settings">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          Cloud Sync
+        </button>
+      </div>
+    </header>
+
+    <!-- ====================================================================
+         HERO DIAGNOSTIC BANNER (Fertility + Reaction + Health Score)
+         ==================================================================== -->
+    <section class="hero-diagnostics" id="hero-diagnostics-section">
+      <!-- Overall Fertility -->
+      <div class="diagnostic-card" style="--card-accent: #34d399;">
+        <div class="diag-icon">&#127793;</div>
+        <div class="diag-details">
+          <div class="diag-title">Overall Fertility</div>
+          <div class="diag-value" id="diag-fertility-val">
+            MEDIUM <span class="badge-tag badge-med">198 mg/kg</span>
+          </div>
+          <div class="diag-subtitle" id="diag-fertility-sub">Moderate macronutrient balance</div>
+        </div>
+      </div>
+
+      <!-- Soil Reaction / pH -->
+      <div class="diagnostic-card" style="--card-accent: #06b6d4;">
+        <div class="diag-icon">&#9879;</div>
+        <div class="diag-details">
+          <div class="diag-title">Soil Classification</div>
+          <div class="diag-value" id="diag-soil-type-val">
+            Neutral <span class="badge-tag badge-high">pH 6.85</span>
+          </div>
+          <div class="diag-subtitle" id="diag-soil-type-sub">Prime biological assimilation range</div>
+        </div>
+      </div>
+
+      <!-- Health Score -->
+      <div class="diagnostic-card" style="--card-accent: #f59e0b;">
+        <div class="diag-icon">&#9733;</div>
+        <div class="diag-details">
+          <div class="diag-title">Dharti Soil Health Index</div>
+          <div class="diag-value" id="ai-health-score-val" style="color: #34d399;">
+            92/100
+          </div>
+          <div class="diag-subtitle">Optimal moisture and nutrient retention</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         LIVE SENSOR MONITORING GRID (6 Core Parameters)
+         ==================================================================== -->
+    <div class="section-header">
+      <h2 class="section-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+        Live Soil Parameters
+      </h2>
+      <span style="font-size: 0.8rem; color: var(--text-dim);">RS-485 Modbus RTU &bull; Realtime</span>
+    </div>
+
+    <section class="sensor-grid" id="sensor-grid-section">
+      <!-- 1. Nitrogen (N) -->
+      <div class="sensor-card card-nitro" id="card-nitrogen">
+        <div class="sensor-card-top">
+          <div class="sensor-symbol">N</div>
+          <span class="sensor-state-badge">Optimal</span>
+        </div>
+        <div class="sensor-name">Nitrogen Concentration</div>
+        <div class="sensor-value-box">
+          <span class="sensor-value" id="val-n">48</span>
+          <span class="sensor-unit">mg/kg</span>
+        </div>
+        <div class="sensor-meter">
+          <div class="sensor-meter-fill" id="fill-n" style="width: 45%;"></div>
+        </div>
+        <div class="sensor-footer">
+          <span>Target: 20 - 80 mg/kg</span>
+          <span>Reg 0x001E[0]</span>
+        </div>
+      </div>
+
+      <!-- 2. Phosphorus (P) -->
+      <div class="sensor-card card-phos" id="card-phosphorus">
+        <div class="sensor-card-top">
+          <div class="sensor-symbol">P</div>
+          <span class="sensor-state-badge">Optimal</span>
+        </div>
+        <div class="sensor-name">Phosphorus Concentration</div>
+        <div class="sensor-value-box">
+          <span class="sensor-value" id="val-p">35</span>
+          <span class="sensor-unit">mg/kg</span>
+        </div>
+        <div class="sensor-meter">
+          <div class="sensor-meter-fill" id="fill-p" style="width: 50%;"></div>
+        </div>
+        <div class="sensor-footer">
+          <span>Target: 15 - 50 mg/kg</span>
+          <span>Reg 0x001E[1]</span>
+        </div>
+      </div>
+
+      <!-- 3. Potassium (K) -->
+      <div class="sensor-card card-potas" id="card-potassium">
+        <div class="sensor-card-top">
+          <div class="sensor-symbol">K</div>
+          <span class="sensor-state-badge">High</span>
+        </div>
+        <div class="sensor-name">Potassium Concentration</div>
+        <div class="sensor-value-box">
+          <span class="sensor-value" id="val-k">115</span>
+          <span class="sensor-unit">mg/kg</span>
+        </div>
+        <div class="sensor-meter">
+          <div class="sensor-meter-fill" id="fill-k" style="width: 65%;"></div>
+        </div>
+        <div class="sensor-footer">
+          <span>Target: 80 - 200 mg/kg</span>
+          <span>Reg 0x001E[2]</span>
+        </div>
+      </div>
+
+      <!-- 4. Soil Moisture -->
+      <div class="sensor-card card-moist" id="card-moisture">
+        <div class="sensor-card-top">
+          <div class="sensor-symbol">&#128167;</div>
+          <span class="sensor-state-badge">Balanced</span>
+        </div>
+        <div class="sensor-name">Soil Moisture</div>
+        <div class="sensor-value-box">
+          <span class="sensor-value" id="val-moist">32.4</span>
+          <span class="sensor-unit">%</span>
+        </div>
+        <div class="sensor-meter">
+          <div class="sensor-meter-fill" id="fill-moist" style="width: 32%;"></div>
+        </div>
+        <div class="sensor-footer">
+          <span>Ideal: 25 - 45 %</span>
+          <span>Reg 0x0012[0]</span>
+        </div>
+      </div>
+
+      <!-- 5. Soil Temperature -->
+      <div class="sensor-card card-temp" id="card-temperature">
+        <div class="sensor-card-top">
+          <div class="sensor-symbol">&#127777;</div>
+          <span class="sensor-state-badge">Normal</span>
+        </div>
+        <div class="sensor-name">Soil Temperature</div>
+        <div class="sensor-value-box">
+          <span class="sensor-value" id="val-temp">26.8</span>
+          <span class="sensor-unit">&deg;C</span>
+        </div>
+        <div class="sensor-meter">
+          <div class="sensor-meter-fill" id="fill-temp" style="width: 53%;"></div>
+        </div>
+        <div class="sensor-footer">
+          <span>Ambient: 15 - 35 °C</span>
+          <span>Reg 0x0012[1]</span>
+        </div>
+      </div>
+
+      <!-- 6. Soil pH -->
+      <div class="sensor-card card-ph" id="card-ph">
+        <div class="sensor-card-top">
+          <div class="sensor-symbol">pH</div>
+          <span class="sensor-state-badge">Neutral</span>
+        </div>
+        <div class="sensor-name">Soil Acidity / pH</div>
+        <div class="sensor-value-box">
+          <span class="sensor-value" id="val-ph">6.85</span>
+          <span class="sensor-unit">pH</span>
+        </div>
+        <div class="sensor-meter">
+          <div class="sensor-meter-fill" id="fill-ph" style="width: 49%;"></div>
+        </div>
+        <div class="sensor-footer">
+          <span>Neutral: 6.0 - 7.5</span>
+          <span>Reg 0x0006</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         MIDDLE SECTION: CROP SUITABILITY & DHARTI AI SMART INSIGHTS
+         ==================================================================== -->
+    <div class="middle-grid">
+      <!-- Crop Suitability Matrix -->
+      <div class="panel-card" id="panel-crop-suitability">
+        <div class="panel-card-header">
+          <div class="panel-card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a10 10 0 0 0-3 19.5v-3.5a7 7 0 0 1 6 0v3.5A10 10 0 0 0 12 2z"></path>
+            </svg>
+            Crop Suitability Matrix
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-dim);">Live Agronomic Rules</span>
+        </div>
+
+        <div class="crop-list">
+          <!-- Wheat -->
+          <div class="crop-item">
+            <div class="crop-info">
+              <div class="crop-icon">&#127806;</div>
+              <div>
+                <div class="crop-name">Wheat (गेहूँ)</div>
+                <div class="crop-rule">Rule: pH 6.0 - 7.5 &bull; Moisture &lt; 35%</div>
+              </div>
+            </div>
+            <div class="crop-badge suitable" id="badge-wheat">Suitable &#9989;</div>
+          </div>
+
+          <!-- Rice -->
+          <div class="crop-item">
+            <div class="crop-info">
+              <div class="crop-icon">&#127805;</div>
+              <div>
+                <div class="crop-name">Rice / Paddy (धान)</div>
+                <div class="crop-rule">Rule: Moisture &gt; 40% &bull; pH &ge; 5.5</div>
+              </div>
+            </div>
+            <div class="crop-badge unsuitable" id="badge-rice">Not Suitable &#10060;</div>
+          </div>
+
+          <!-- Maize -->
+          <div class="crop-item">
+            <div class="crop-info">
+              <div class="crop-icon">&#127805;</div>
+              <div>
+                <div class="crop-name">Maize / Corn (मक्का)</div>
+                <div class="crop-rule">Rule: Nitrogen &gt; 20 mg/kg &bull; pH &ge; 5.8</div>
+              </div>
+            </div>
+            <div class="crop-badge suitable" id="badge-maize">Suitable &#9989;</div>
+          </div>
+
+          <!-- Mustard -->
+          <div class="crop-item">
+            <div class="crop-info">
+              <div class="crop-icon">&#127804;</div>
+              <div>
+                <div class="crop-name">Mustard (सरसों)</div>
+                <div class="crop-rule">Rule: pH 6.0 - 7.5 &bull; Moderate Moisture</div>
+              </div>
+            </div>
+            <div class="crop-badge suitable" id="badge-mustard">Suitable &#9989;</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dharti AI Smart Agronomy Insights Engine -->
+      <div class="panel-card" id="panel-ai-insights">
+        <div class="panel-card-header">
+          <div class="panel-card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+            Dharti AI Earth Intelligence
+          </div>
+          <span class="ai-badge">AI Active</span>
+        </div>
+
+        <div class="ai-health-meter-container">
+          <span class="ai-health-title">Computed Soil Fertility Health Index</span>
+          <span class="ai-health-score" id="ai-health-badge">92 / 100</span>
+        </div>
+
+        <div id="ai-recommendations-container">
+          <!-- Populated dynamically via ai-insights.js -->
+          <div class="ai-recommendation-box">
+            <h4>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              </svg>
+              Optimal Soil pH Balance
+            </h4>
+            <p>Soil pH is in the optimal agronomic range (6.85). Micronutrient uptake capacity is maximum.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         ANALYTICS & CHARTING STUDIO
+         ==================================================================== -->
+    <section class="analytics-section" id="analytics-section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+          Soil Analytics & Trends
+        </h2>
+        <div class="chart-controls">
+          <button class="chart-tab-btn active">Live Telemetry</button>
+        </div>
+      </div>
+
+      <div class="charts-wrapper">
+        <div class="chart-box">
+          <h4>NPK Macronutrient Balance (mg/kg)</h4>
+          <div class="chart-canvas-container">
+            <canvas id="chart-npk"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-box">
+          <h4>Moisture (%) vs Temperature (&deg;C) Timeline</h4>
+          <div class="chart-canvas-container">
+            <canvas id="chart-temp-moist"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         HISTORICAL LOGS & TELEMETRY TABLE
+         ==================================================================== -->
+    <section class="history-section" id="history-section">
+      <div class="table-controls">
+        <h2 class="section-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          Historical Soil Log
+        </h2>
+
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="text" id="history-search" class="search-input" placeholder="Search time, moisture, pH...">
+          <button class="btn-header" id="btn-export-csv">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Nitrogen (mg/kg)</th>
+              <th>Phosphorus (mg/kg)</th>
+              <th>Potassium (mg/kg)</th>
+              <th>Moisture (%)</th>
+              <th>Temperature (&deg;C)</th>
+              <th>pH Level</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         HARDWARE TELEMETRY & PHYSICAL LCD DISPLAY EMULATION
+         ==================================================================== -->
+    <div class="hardware-grid">
+      <!-- Hardware Telemetry -->
+      <div class="panel-card" id="panel-hardware-telemetry">
+        <div class="panel-card-header">
+          <div class="panel-card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+              <rect x="9" y="9" width="6" height="6"></rect>
+              <line x1="9" y1="1" x2="9" y2="4"></line>
+              <line x1="15" y1="1" x2="15" y2="4"></line>
+              <line x1="9" y1="20" x2="9" y2="23"></line>
+              <line x1="15" y1="20" x2="15" y2="23"></line>
+              <line x1="20" y1="9" x2="23" y2="9"></line>
+              <line x1="20" y1="14" x2="23" y2="14"></line>
+              <line x1="1" y1="9" x2="4" y2="9"></line>
+              <line x1="1" y1="14" x2="4" y2="14"></line>
+            </svg>
+            ESP32 & RS-485 Telemetry
+          </div>
+          <span style="font-size: 0.75rem; color: #34d399;">Bus Active</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.82rem;">
+          <div><strong style="color: var(--text-dim);">Device ID:</strong> <span id="stat-node-id">dharti-node-01</span></div>
+          <div><strong style="color: var(--text-dim);">Firmware:</strong> <span>2.1.0-CLOUD</span></div>
+          <div><strong style="color: var(--text-dim);">IP Address:</strong> <span id="stat-ip-val">192.168.1.105</span></div>
+          <div><strong style="color: var(--text-dim);">Wi-Fi RSSI:</strong> <span id="stat-rssi-val">-58 dBm (Good)</span></div>
+          <div><strong style="color: var(--text-dim);">Modbus Bus:</strong> <span>GPIO 16/17 (9600 8N1)</span></div>
+          <div><strong style="color: var(--text-dim);">Direction Pin:</strong> <span>GPIO 4 (RE/DE)</span></div>
+        </div>
+      </div>
+
+      <!-- 16x2 LCD Emulator -->
+      <div class="panel-card" id="panel-lcd-emulator">
+        <div class="panel-card-header">
+          <div class="panel-card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            Field 16x2 LCD Display Live Mirror
+          </div>
+          <span style="font-size: 0.75rem; color: #6ee7b7;">I2C 0x27</span>
+        </div>
+
+        <div class="lcd-box">
+          <div class="lcd-line" id="lcd-line-1">DHARTI RAKSHAK  </div>
+          <div class="lcd-line" id="lcd-line-2">W:OK S:OK C:OK  </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         FOOTER & TEAM RECOGNITION
+         ==================================================================== -->
+    <footer class="footer-bar" id="footer-section">
+      <div>
+        <strong>DHARTI RAKSHAK</strong> &bull; Technology for Protecting the Earth
+      </div>
+      <div style="margin-top: 6px; color: var(--text-dim);">
+        Developed by <strong>Royal Challenger Kanpur</strong>
+      </div>
+      <ul class="team-list">
+        <li class="team-member">Namit Kumar</li>
+        <li class="team-member">Sanidhya Krishna Yadav</li>
+        <li class="team-member">Yugant Dwivedi</li>
+        <li class="team-member">Rudransh Uttam</li>
+      </ul>
+      <div style="margin-top: 14px; font-size: 0.75rem; color: var(--text-dim);">
+        Cloudflare Pages &bull; Firebase Realtime Database &bull; Modbus RTU RS-485
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ====================================================================
+       FIREBASE CONFIGURATION MODAL
+       ==================================================================== -->
+  <div class="modal-backdrop" id="config-modal">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="color: var(--primary-mint); font-size: 1.2rem;">Cloud & Firebase Configuration</h3>
+        <button id="modal-close-btn" style="background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1.4rem;">&times;</button>
+      </div>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">
+        To connect to your live Firebase backend, edit <code style="color: var(--primary-mint); font-family: var(--font-mono);">website/js/firebase-config.js</code> with your Firebase project credentials.
+      </p>
+      <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.78rem; color: #a7f3d0; margin-bottom: 16px; overflow-x: auto;">
+        databaseURL: "https://dharti-rakshak-iot-59952-default-rtdb.asia-southeast1.firebasedatabase.app"<br>
+        ACTIVE_DEVICE_ID: "dharti-node-01"
+      </div>
+      <div style="text-align: right;">
+        <button class="btn-header" onclick="document.getElementById('config-modal').classList.remove('open')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main ES Module Script -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
