@@ -1,0 +1,6 @@
+name = "dharti-rakshak-dashboard"
+compatibility_date = "2026-08-17"
+
+[pages]
+# Directory containing public assets to serve
+pages_build_output_dir = "."

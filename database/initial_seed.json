@@ -1,0 +1,85 @@
+{
+  "devices": {
+    "dharti-node-01": {
+      "status": {
+        "online": true,
+        "lastSeen": 1771234567000,
+        "ip": "192.168.1.105",
+        "rssi": -58,
+        "wifiSSID": "Vivo 1919",
+        "sensorStatus": "HEALTHY",
+        "firmwareVersion": "2.1.0-CLOUD"
+      },
+      "latest": {
+        "moisture": 32.4,
+        "temperature": 26.8,
+        "ph": 6.85,
+        "nitrogen": 48,
+        "phosphorus": 35,
+        "potassium": 115,
+        "totalNPK": 198,
+        "fertility": "MEDIUM",
+        "soilType": "Neutral",
+        "cropSuitability": {
+          "wheat": true,
+          "rice": false,
+          "maize": true
+        },
+        "sensorStatus": "OK",
+        "timestamp": 1771234567000
+      },
+      "readings": {
+        "-Ok001_log": {
+          "timestamp": 1771220167000,
+          "moisture": 31.8,
+          "temperature": 25.2,
+          "ph": 6.80,
+          "nitrogen": 45,
+          "phosphorus": 34,
+          "potassium": 110,
+          "totalNPK": 189
+        },
+        "-Ok002_log": {
+          "timestamp": 1771223767000,
+          "moisture": 32.0,
+          "temperature": 25.7,
+          "ph": 6.82,
+          "nitrogen": 46,
+          "phosphorus": 34,
+          "potassium": 112,
+          "totalNPK": 192
+        },
+        "-Ok003_log": {
+          "timestamp": 1771227367000,
+          "moisture": 32.2,
+          "temperature": 26.1,
+          "ph": 6.84,
+          "nitrogen": 47,
+          "phosphorus": 35,
+          "potassium": 114,
+          "totalNPK": 196
+        },
+        "-Ok004_log": {
+          "timestamp": 1771230967000,
+          "moisture": 32.5,
+          "temperature": 26.5,
+          "ph": 6.85,
+          "nitrogen": 48,
+          "phosphorus": 35,
+          "potassium": 115,
+          "totalNPK": 198
+        },
+        "-Ok005_log": {
+          "timestamp": 1771234567000,
+          "moisture": 32.4,
+          "temperature": 26.8,
+          "ph": 6.85,
+          "nitrogen": 48,
+          "phosphorus": 35,
+          "potassium": 115,
+          "totalNPK": 198
+        }
+      }
+    }
+  }
+}
