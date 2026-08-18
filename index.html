@@ -489,8 +489,8 @@
         <strong>DHARTI RAKSHAK</strong> &bull; Technology for Protecting the Earth
       </div>
       <div id="team-attribution-container">
-        <div style="margin-top: 6px; color: var(--text-dim);">
-          Developed by <strong>Royal Challenger Kanpur</strong>
+        <div style="margin-top: 6px; color: var(--text-dim);" id="team-title-heading">
+          Developed by <strong id="team-name-text">Royal Challenger Kanpur</strong>
         </div>
         <ul class="team-list" id="team-member-list">
           <!-- Dynamically populated from admin settings -->
@@ -646,7 +646,7 @@
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
-              Team Section Visibility & Members
+              Team Section & Name Visibility
             </div>
             <label class="toggle-switch">
               <input type="checkbox" id="admin-toggle-show-team" checked>
@@ -654,8 +654,30 @@
             </label>
           </div>
           <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 12px;">
-            Toggle the entire team section ON/OFF or customize individual member names & visibility.
+            Toggle the entire team section ON/OFF, customize team name, or manage member visibility.
           </p>
+
+          <!-- Team Name Option Sub-block -->
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+              <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-primary);">
+                Show Team Name ("Developed by...")
+              </span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="admin-toggle-show-team-name" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.72rem; color: var(--text-dim); margin-bottom: 4px;">Team Name Text</label>
+              <input type="text" id="admin-team-name-input" class="admin-input-text" value="Royal Challenger Kanpur" placeholder="e.g. Royal Challenger Kanpur">
+            </div>
+          </div>
+
+          <!-- Team Members List Header -->
+          <div style="font-size: 0.82rem; font-weight: 700; color: var(--primary-mint); margin-bottom: 6px;">
+            Team Members
+          </div>
 
           <!-- Manage Members List -->
           <div class="team-manage-list" id="admin-team-manage-list">

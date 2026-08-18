@@ -24,6 +24,8 @@ class DhartiApp {
       site_online: true,
       maintenance_msg: "The Dharti Rakshak system is currently undergoing scheduled sensor maintenance & telemetry upgrades. We will be back online shortly.",
       show_team: true,
+      show_team_name: true,
+      team_name: "Royal Challenger Kanpur",
       admin_pin: "1234",
       team_members: [
         { id: "m1", name: "Namit Kumar", visible: true },
@@ -173,16 +175,32 @@ class DhartiApp {
 
   renderTeamSection() {
     const container = document.getElementById('team-attribution-container');
+    const heading = document.getElementById('team-title-heading');
+    const teamNameElem = document.getElementById('team-name-text');
     const list = document.getElementById('team-member-list');
 
     if (!container || !list) return;
 
+    // Master Switch: Show/Hide entire team section
     if (!this.systemConfig.show_team) {
       container.style.display = 'none';
       return;
     }
 
     container.style.display = 'block';
+
+    // Show/Hide Team Name Heading
+    if (heading) {
+      if (this.systemConfig.show_team_name === false) {
+        heading.style.display = 'none';
+      } else {
+        heading.style.display = 'block';
+        if (teamNameElem) {
+          teamNameElem.innerText = this.systemConfig.team_name || "Royal Challenger Kanpur";
+        }
+      }
+    }
+
     const visibleMembers = (this.systemConfig.team_members || []).filter(m => m.visible !== false);
     
     list.innerHTML = visibleMembers.map(m => `
@@ -353,10 +371,14 @@ class DhartiApp {
         // Collect current switch states
         const siteOnlineToggle = document.getElementById('admin-toggle-site-online');
         const showTeamToggle = document.getElementById('admin-toggle-show-team');
+        const showTeamNameToggle = document.getElementById('admin-toggle-show-team-name');
+        const teamNameInput = document.getElementById('admin-team-name-input');
         const maintMsgInput = document.getElementById('admin-maintenance-msg-input');
 
         if (siteOnlineToggle) this.systemConfig.site_online = siteOnlineToggle.checked;
         if (showTeamToggle) this.systemConfig.show_team = showTeamToggle.checked;
+        if (showTeamNameToggle) this.systemConfig.show_team_name = showTeamNameToggle.checked;
+        if (teamNameInput) this.systemConfig.team_name = teamNameInput.value.trim() || "Royal Challenger Kanpur";
         if (maintMsgInput) this.systemConfig.maintenance_msg = maintMsgInput.value.trim();
 
         this.saveSystemConfig();
@@ -380,10 +402,14 @@ class DhartiApp {
     // Populate current values
     const siteOnlineToggle = document.getElementById('admin-toggle-site-online');
     const showTeamToggle = document.getElementById('admin-toggle-show-team');
+    const showTeamNameToggle = document.getElementById('admin-toggle-show-team-name');
+    const teamNameInput = document.getElementById('admin-team-name-input');
     const maintMsgInput = document.getElementById('admin-maintenance-msg-input');
 
     if (siteOnlineToggle) siteOnlineToggle.checked = (this.systemConfig.site_online !== false);
     if (showTeamToggle) showTeamToggle.checked = (this.systemConfig.show_team !== false);
+    if (showTeamNameToggle) showTeamNameToggle.checked = (this.systemConfig.show_team_name !== false);
+    if (teamNameInput) teamNameInput.value = this.systemConfig.team_name || "Royal Challenger Kanpur";
     if (maintMsgInput) maintMsgInput.value = this.systemConfig.maintenance_msg || "";
 
     this.populateAdminTeamList();
