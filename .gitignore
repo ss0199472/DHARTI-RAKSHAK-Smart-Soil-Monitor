@@ -14,7 +14,15 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Web dependencies (if installed)
+# Web & Backend dependencies
 node_modules/
+backend/node_modules/
 .dist/
 .wrangler/
+
+# Environment Secrets
+.env
+.env.*
+backend/.env
+backend/.env.*
+

@@ -10,6 +10,7 @@
 import { dataStream, firebaseConfig } from './firebase-config.js';
 import { analyticsManager } from './charts.js';
 import { aiEngine } from './ai-insights.js';
+import { dhartiChatbot } from './chatbot.js';
 
 class DhartiApp {
   constructor() {
@@ -27,6 +28,7 @@ class DhartiApp {
       show_team_name: true,
       team_name: "Royal Challenger Kanpur",
       admin_pin: "1234",
+      backend_url: localStorage.getItem('dharti_backend_url') || 'http://localhost:5000',
       team_members: [
         { id: "m1", name: "Namit Kumar", visible: true },
         { id: "m2", name: "Sanidhya Krishna Yadav", visible: true },
@@ -37,13 +39,17 @@ class DhartiApp {
   }
 
   async init() {
-    console.log("[Dharti Rakshak] Initializing Application...");
+    console.log("[Dharti Rakshak] Initializing Application with AI & Chatbot...");
     
     // 1. Load Admin & Team Configuration
     await this.loadSystemConfig();
 
-    // 2. Initialize Analytics Charts
+    // 2. Initialize Analytics Charts, AI Engine, and Chatbot
     analyticsManager.initialize();
+    aiEngine.setBackendUrl(this.systemConfig.backend_url);
+    aiEngine.init();
+    dhartiChatbot.setBackendUrl(this.systemConfig.backend_url);
+    dhartiChatbot.init();
 
     // 3. Attach Event Handlers (Admin + UI)
     this.attachEventListeners();
@@ -374,12 +380,20 @@ class DhartiApp {
         const showTeamNameToggle = document.getElementById('admin-toggle-show-team-name');
         const teamNameInput = document.getElementById('admin-team-name-input');
         const maintMsgInput = document.getElementById('admin-maintenance-msg-input');
+        const backendUrlInput = document.getElementById('admin-backend-url-input');
 
         if (siteOnlineToggle) this.systemConfig.site_online = siteOnlineToggle.checked;
         if (showTeamToggle) this.systemConfig.show_team = showTeamToggle.checked;
         if (showTeamNameToggle) this.systemConfig.show_team_name = showTeamNameToggle.checked;
         if (teamNameInput) this.systemConfig.team_name = teamNameInput.value.trim() || "Royal Challenger Kanpur";
         if (maintMsgInput) this.systemConfig.maintenance_msg = maintMsgInput.value.trim();
+        if (backendUrlInput) {
+          const bUrl = backendUrlInput.value.trim().replace(/\/+$/, '') || 'http://localhost:5000';
+          this.systemConfig.backend_url = bUrl;
+          localStorage.setItem('dharti_backend_url', bUrl);
+          aiEngine.setBackendUrl(bUrl);
+          dhartiChatbot.setBackendUrl(bUrl);
+        }
 
         this.saveSystemConfig();
       });
@@ -405,12 +419,14 @@ class DhartiApp {
     const showTeamNameToggle = document.getElementById('admin-toggle-show-team-name');
     const teamNameInput = document.getElementById('admin-team-name-input');
     const maintMsgInput = document.getElementById('admin-maintenance-msg-input');
+    const backendUrlInput = document.getElementById('admin-backend-url-input');
 
     if (siteOnlineToggle) siteOnlineToggle.checked = (this.systemConfig.site_online !== false);
     if (showTeamToggle) showTeamToggle.checked = (this.systemConfig.show_team !== false);
     if (showTeamNameToggle) showTeamNameToggle.checked = (this.systemConfig.show_team_name !== false);
     if (teamNameInput) teamNameInput.value = this.systemConfig.team_name || "Royal Challenger Kanpur";
     if (maintMsgInput) maintMsgInput.value = this.systemConfig.maintenance_msg || "";
+    if (backendUrlInput) backendUrlInput.value = this.systemConfig.backend_url || localStorage.getItem('dharti_backend_url') || 'http://localhost:5000';
 
     this.populateAdminTeamList();
   }

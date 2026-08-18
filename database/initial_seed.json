@@ -23,7 +23,8 @@
         "cropSuitability": {
           "wheat": true,
           "rice": false,
-          "maize": true
+          "maize": true,
+          "mustard": true
         },
         "sensorStatus": "OK",
         "timestamp": 1771234567000
@@ -48,38 +49,92 @@
           "phosphorus": 34,
           "potassium": 112,
           "totalNPK": 192
-        },
-        "-Ok003_log": {
-          "timestamp": 1771227367000,
-          "moisture": 32.2,
-          "temperature": 26.1,
-          "ph": 6.84,
-          "nitrogen": 47,
-          "phosphorus": 35,
-          "potassium": 114,
-          "totalNPK": 196
-        },
-        "-Ok004_log": {
-          "timestamp": 1771230967000,
-          "moisture": 32.5,
-          "temperature": 26.5,
-          "ph": 6.85,
-          "nitrogen": 48,
-          "phosphorus": 35,
-          "potassium": 115,
-          "totalNPK": 198
-        },
-        "-Ok005_log": {
-          "timestamp": 1771234567000,
-          "moisture": 32.4,
-          "temperature": 26.8,
-          "ph": 6.85,
-          "nitrogen": 48,
-          "phosphorus": 35,
-          "potassium": 115,
-          "totalNPK": 198
         }
       }
     }
+  },
+  "aiRecommendations": {
+    "dharti-node-01": {
+      "latest": {
+        "timestamp": 1771234567000,
+        "deviceId": "dharti-node-01",
+        "summary": "Soil conditions are balanced with neutral pH (6.85) and adequate moisture (32.4%). Nitrogen level is moderate and can support vegetative growth with light organic enrichment.",
+        "soilHealthScore": 84,
+        "soilStatus": "Optimal & Biologically Active",
+        "nutrientStatus": {
+          "overall": "Balanced",
+          "nitrogen": {
+            "level": "Adequate",
+            "assessment": "48 mg/kg provides steady baseline nitrogen for cereal crops."
+          },
+          "phosphorus": {
+            "level": "Adequate",
+            "assessment": "35 mg/kg ensures healthy root architecture."
+          },
+          "potassium": {
+            "level": "Adequate",
+            "assessment": "115 mg/kg supports cellular turgor and drought resilience."
+          }
+        },
+        "phMoistureAssessment": {
+          "phAnalysis": "pH 6.85 is within the optimal nutrient absorption range (6.0 - 7.5).",
+          "moistureAnalysis": "Moisture at 32.4% is ideal for wheat, mustard, and leguminous crops."
+        },
+        "recommendedActions": [
+          {
+            "priority": "Medium",
+            "title": "Maintain Organic Bio-Mass",
+            "description": "Apply well-decomposed vermicompost (1-2 tons/acre) before next sowing to sustain organic carbon.",
+            "type": "organic"
+          },
+          {
+            "priority": "Low",
+            "title": "Soil Moisture Monitoring",
+            "description": "Schedule next irrigation cycle when moisture dips below 25%.",
+            "type": "irrigation"
+          }
+        ],
+        "suggestedNextSteps": [
+          "Continue monitoring real-time RS-485 telemetry.",
+          "Perform secondary spot checks prior to fertilizer top-dressing."
+        ],
+        "confidence": "High (Verified Live Modbus Telemetry)",
+        "warnings": [],
+        "model": "llama-3.3-70b-versatile via Groq",
+        "generatedAt": "2026-08-18T12:00:00.000Z"
+      }
+    }
+  },
+  "projectMetadata": {
+    "projectName": "DHARTI RAKSHAK (धर्ती रक्षक)",
+    "tagline": "Technology for Protecting the Earth",
+    "creator": "Namit Kumar",
+    "teamName": "Royal Challenger Kanpur",
+    "teamMembers": [
+      "Namit Kumar",
+      "Sanidhya Krishna Yadav",
+      "Yugant Dwivedi",
+      "Rudransh Uttam"
+    ],
+    "designedBy": "NK Innovation Hub (https://nk-innovation-hub.netlify.app/)",
+    "version": "2.1.0-AI",
+    "objective": "Real-time industrial IoT soil nutrient, moisture, pH, and environmental intelligence platform designed to maximize crop yield, prevent soil degradation, and empower farmers with precision agronomy and AI intelligence.",
+    "hardwareStack": "ESP32 Dev Module, Industrial RS-485 Modbus NPK+Moisture+Temp+pH Soil Sensor, MAX485 TTL-to-RS485 transceiver, 16x2 I2C LCD Display",
+    "pinoutDetails": "ESP32 GPIO 16 (RX2), GPIO 17 (TX2), GPIO 4 (RE/DE Direction Control), I2C 0x27 for 16x2 LCD",
+    "cloudStack": "Firebase Realtime Database, Cloudflare Pages (Frontend), Render Backend (Node.js/Express) with Groq Llama 3.3 AI"
+  },
+  "system_config": {
+    "site_online": true,
+    "maintenance_msg": "The Dharti Rakshak system is currently undergoing scheduled sensor maintenance & telemetry upgrades. We will be back online shortly.",
+    "show_team": true,
+    "show_team_name": true,
+    "team_name": "Royal Challenger Kanpur",
+    "admin_pin": "1234",
+    "team_members": [
+      { "id": "m1", "name": "Namit Kumar", "visible": true },
+      { "id": "m2", "name": "Sanidhya Krishna Yadav", "visible": true },
+      { "id": "m3", "name": "Yugant Dwivedi", "visible": true },
+      { "id": "m4", "name": "Rudransh Uttam", "visible": true }
+    ]
   }
 }

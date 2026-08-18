@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: dharti-rakshak-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    rootDir: backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FIREBASE_DATABASE_URL
+        value: https://dharti-rakshak-iot-59952-default-rtdb.asia-southeast1.firebasedatabase.app
+      - key: DEVICE_ID
+        value: dharti-node-01
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: GROQ_API_KEY
+        sync: false # Set securely in Render dashboard

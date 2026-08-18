@@ -5,6 +5,20 @@
         ".read": true,
         ".write": true
       }
+    },
+    "aiRecommendations": {
+      "$deviceId": {
+        ".read": true,
+        ".write": true
+      }
+    },
+    "projectMetadata": {
+      ".read": true,
+      ".write": true
+    },
+    "system_config": {
+      ".read": true,
+      ".write": true
     }
   }
 }

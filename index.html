@@ -306,7 +306,7 @@
         </div>
       </div>
 
-      <!-- Dharti AI Smart Agronomy Insights Engine -->
+      <!-- Dharti AI Smart Agronomy Insights Engine & Groq AI Card -->
       <div class="panel-card" id="panel-ai-insights">
         <div class="panel-card-header">
           <div class="panel-card-title">
@@ -317,11 +317,22 @@
             </svg>
             Dharti AI Earth Intelligence
           </div>
-          <span class="ai-badge">AI Ready</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="ai-badge" id="ai-confidence-badge">AI Ready</span>
+            <button class="btn-header" id="btn-analyze-ai" style="padding: 4px 12px; font-size: 0.76rem; background: rgba(16, 185, 129, 0.15); border-color: var(--primary-mint); color: var(--primary-mint);" title="Trigger real-time Groq AI soil assessment">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              Analyze with Groq AI ⚡
+            </button>
+          </div>
         </div>
 
         <div class="ai-health-meter-container">
-          <span class="ai-health-title">Computed Soil Fertility Health Index</span>
+          <div>
+            <span class="ai-health-title" style="display: block;">Computed Soil Fertility Health Index</span>
+            <span style="font-size: 0.72rem; color: var(--text-dim);" id="ai-last-analysis-time">Awaiting sensor sync</span>
+          </div>
           <span class="ai-health-score" id="ai-health-badge">-- / 100</span>
         </div>
 
@@ -333,9 +344,9 @@
                 <line x1="12" y1="8" x2="12" y2="12"></line>
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
-              Hardware Waiting State
+              Hardware Telemetry State
             </h4>
-            <p>Flash your ESP32 with <code>dharti_rakshak_firmware.ino</code> and power it on. As soon as real sensor frames arrive, Dharti AI will analyze your soil.</p>
+            <p>Flash your ESP32 with <code>dharti_rakshak_firmware.ino</code> and power it on. Click <strong>"Analyze with Groq AI ⚡"</strong> to receive precision agronomic insights.</p>
           </div>
         </div>
       </div>
@@ -716,6 +727,26 @@
           </div>
         </div>
 
+        <!-- 4. Render Backend & Groq AI Settings -->
+        <div class="admin-section-block">
+          <div class="admin-section-title" style="margin-bottom: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+              <line x1="6" y1="6" x2="6.01" y2="6"></line>
+              <line x1="6" y1="18" x2="6.01" y2="18"></line>
+            </svg>
+            Render Backend & AI Configuration
+          </div>
+          <p style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 10px;">
+            Set your deployed Render backend service URL to connect the Groq AI Agronomy Engine and Chatbot.
+          </p>
+          <div>
+            <label style="display: block; font-size: 0.72rem; color: var(--text-dim); margin-bottom: 4px;">Render Backend Service URL</label>
+            <input type="text" id="admin-backend-url-input" class="admin-input-text" placeholder="e.g. https://dharti-rakshak-backend.onrender.com" value="http://localhost:5000">
+          </div>
+        </div>
+
         <!-- Action Bar -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
           <button class="btn-header" id="btn-admin-logout" style="color: var(--accent-rose); border-color: rgba(244, 63, 94, 0.3);">
@@ -750,6 +781,67 @@
       <div style="text-align: right;">
         <button class="btn-header" onclick="document.getElementById('config-modal').classList.remove('open')">Close</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       DHARTI AI CHATBOT FLOATING WIDGET
+       ==================================================================== -->
+  <!-- Floating Action Button -->
+  <button class="dharti-chat-toggle" id="dharti-chat-toggle" aria-label="Open Dharti AI Chatbot">
+    <span class="chat-toggle-pulse"></span>
+    <span>🌱 Ask Dharti AI</span>
+  </button>
+
+  <!-- Expandable Chat Window -->
+  <div class="dharti-chat-window" id="dharti-chat-window">
+    <div class="chat-header">
+      <div class="chat-header-title">
+        <div class="chat-avatar" style="width: 28px; height: 28px; font-size: 0.95rem;">🌿</div>
+        <div>
+          <h4>Dharti AI Assistant</h4>
+          <span>Agronomy & Project Intelligence &bull; Groq Llama 3.3</span>
+        </div>
+      </div>
+      <div class="chat-controls-group">
+        <button class="chat-btn-icon" id="chat-new-btn" title="New Conversation">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+        </button>
+        <button class="chat-btn-icon" id="chat-close-btn" title="Close Chat">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Message Thread Container -->
+    <div class="chat-messages" id="chat-messages-container">
+      <!-- Populated dynamically by DhartiChatbot -->
+    </div>
+
+    <!-- Suggested Query Chips -->
+    <div class="chat-suggestions" id="chat-suggestions-container">
+      <button class="chat-suggestion-pill" data-query="What do my current soil readings mean?">📊 Explain My Readings</button>
+      <button class="chat-suggestion-pill" data-query="Which crop is suitable for my soil right now?">🌾 Crop Suitability</button>
+      <button class="chat-suggestion-pill" data-query="Who created Dharti Rakshak?">👥 Who Created This?</button>
+      <button class="chat-suggestion-pill" data-query="How does the hardware & RS-485 Modbus work?">⚙️ Hardware Details</button>
+      <button class="chat-suggestion-pill" data-query="Give me organic soil management advice.">🌿 Organic Guidance</button>
+    </div>
+
+    <!-- Input Bar -->
+    <div class="chat-input-area">
+      <input type="text" class="chat-input" id="chat-user-input" placeholder="Ask about your soil or project..." autocomplete="off">
+      <button class="chat-send-btn" id="chat-send-btn" aria-label="Send Message">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
     </div>
   </div>
 

@@ -1,0 +1,33 @@
+{
+  "name": "dharti-rakshak-ai-backend",
+  "version": "2.1.0",
+  "description": "Render Backend Service & Groq AI Engine for Dharti Rakshak Smart Soil Monitoring Platform",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "iot",
+    "esp32",
+    "soil-sensor",
+    "modbus-rs485",
+    "groq-ai",
+    "llama3",
+    "precision-agronomy",
+    "firebase"
+  ],
+  "author": "Royal Challenger Kanpur & NK Innovation Hub",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "groq-sdk": "^0.15.0",
+    "helmet": "^8.0.0",
+    "node-fetch": "^3.3.2"
+  }
+}
