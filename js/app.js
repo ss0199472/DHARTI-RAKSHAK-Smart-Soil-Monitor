@@ -33,6 +33,7 @@ class DhartiApp {
         : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://dharti-rakshak-backend.onrender.com'),
       groq_api_key: localStorage.getItem('dharti_groq_api_key') || '',
       groq_model: localStorage.getItem('dharti_groq_model') || 'llama-3.3-70b-versatile',
+      ai_enabled: localStorage.getItem('dharti_ai_enabled') !== 'false',
       team_members: [
         { id: "m1", name: "Namit Kumar", visible: true },
         { id: "m2", name: "Sanidhya Krishna Yadav", visible: true },
@@ -64,6 +65,7 @@ class DhartiApp {
     // 4. Render Initial Team and System State
     this.renderTeamSection();
     this.applySitePowerState();
+    this.applyAiState();
 
     // 5. Connect Realtime Data Stream
     dataStream.initialize();
@@ -442,6 +444,16 @@ class DhartiApp {
       });
     }
 
+    // Immediate AI Enabled Toggle Preview
+    const aiToggle = document.getElementById('admin-toggle-ai-enabled');
+    if (aiToggle) {
+      aiToggle.addEventListener('change', () => {
+        this.systemConfig.ai_enabled = aiToggle.checked;
+        localStorage.setItem('dharti_ai_enabled', aiToggle.checked ? 'true' : 'false');
+        this.applyAiState();
+      });
+    }
+
     // Save All
     if (saveAllBtn) {
       saveAllBtn.addEventListener('click', () => {
@@ -454,10 +466,15 @@ class DhartiApp {
         const backendUrlInput = document.getElementById('admin-backend-url-input');
         const groqKeyInputEl = document.getElementById('admin-groq-api-key-input');
         const groqModelSelectEl = document.getElementById('admin-groq-model-select');
+        const aiToggleEl = document.getElementById('admin-toggle-ai-enabled');
 
         if (siteOnlineToggle) this.systemConfig.site_online = siteOnlineToggle.checked;
         if (showTeamToggle) this.systemConfig.show_team = showTeamToggle.checked;
         if (showTeamNameToggle) this.systemConfig.show_team_name = showTeamNameToggle.checked;
+        if (aiToggleEl) {
+          this.systemConfig.ai_enabled = aiToggleEl.checked;
+          localStorage.setItem('dharti_ai_enabled', aiToggleEl.checked ? 'true' : 'false');
+        }
         if (teamNameInput) this.systemConfig.team_name = teamNameInput.value.trim() || "Royal Challenger Kanpur";
         if (maintMsgInput) this.systemConfig.maintenance_msg = maintMsgInput.value.trim();
         if (backendUrlInput) {
@@ -480,6 +497,7 @@ class DhartiApp {
 
         aiEngine.setGroqConfig(this.systemConfig.groq_api_key, this.systemConfig.groq_model);
         dhartiChatbot.setGroqConfig(this.systemConfig.groq_api_key, this.systemConfig.groq_model);
+        this.applyAiState();
 
         this.saveSystemConfig();
       });
@@ -503,6 +521,7 @@ class DhartiApp {
     const siteOnlineToggle = document.getElementById('admin-toggle-site-online');
     const showTeamToggle = document.getElementById('admin-toggle-show-team');
     const showTeamNameToggle = document.getElementById('admin-toggle-show-team-name');
+    const aiToggle = document.getElementById('admin-toggle-ai-enabled');
     const teamNameInput = document.getElementById('admin-team-name-input');
     const maintMsgInput = document.getElementById('admin-maintenance-msg-input');
     const backendUrlInput = document.getElementById('admin-backend-url-input');
@@ -512,6 +531,7 @@ class DhartiApp {
     if (siteOnlineToggle) siteOnlineToggle.checked = (this.systemConfig.site_online !== false);
     if (showTeamToggle) showTeamToggle.checked = (this.systemConfig.show_team !== false);
     if (showTeamNameToggle) showTeamNameToggle.checked = (this.systemConfig.show_team_name !== false);
+    if (aiToggle) aiToggle.checked = (this.systemConfig.ai_enabled !== false);
     if (teamNameInput) teamNameInput.value = this.systemConfig.team_name || "Royal Challenger Kanpur";
     if (maintMsgInput) maintMsgInput.value = this.systemConfig.maintenance_msg || "";
     if (backendUrlInput) backendUrlInput.value = this.systemConfig.backend_url || localStorage.getItem('dharti_backend_url') || 'http://localhost:5000';
@@ -519,6 +539,26 @@ class DhartiApp {
     if (groqModelSelect) groqModelSelect.value = this.systemConfig.groq_model || localStorage.getItem('dharti_groq_model') || 'llama-3.3-70b-versatile';
 
     this.populateAdminTeamList();
+  }
+
+  applyAiState() {
+    const isAiEnabled = (this.systemConfig.ai_enabled !== false);
+
+    // 1. Toggle Floating Chatbot
+    const chatToggle = document.getElementById('dharti-chat-toggle');
+    const chatWindow = document.getElementById('dharti-chat-window');
+    if (chatToggle) {
+      chatToggle.style.display = isAiEnabled ? 'flex' : 'none';
+    }
+    if (chatWindow && !isAiEnabled) {
+      chatWindow.classList.remove('active');
+    }
+
+    // 2. Toggle Dharti AI Earth Intelligence Card on Dashboard
+    const aiPanel = document.getElementById('panel-ai-insights');
+    if (aiPanel) {
+      aiPanel.style.display = isAiEnabled ? 'block' : 'none';
+    }
   }
 
   populateAdminTeamList() {
