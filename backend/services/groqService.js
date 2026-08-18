@@ -49,8 +49,7 @@ class GroqService {
       'llama-3.1-8b-instant',
       'llama3-8b-8192',
       'llama3-70b-8192',
-      'mixtral-8x7b-32768',
-      'gemma2-9b-it'
+      'mixtral-8x7b-32768'
     ].filter(Boolean);
 
     let lastError = null;
@@ -69,7 +68,12 @@ class GroqService {
       } catch (err) {
         lastError = err;
         if (err.status === 401 || String(err.message).includes('invalid_api_key')) {
-          throw err; // Invalid key should immediately fail
+          throw err; // Invalid key should fail immediately
+        }
+        // If decommissioned or not found, try next candidate
+        if (err.status === 404 || err.status === 400 || String(err.message).includes('model_decommissioned') || String(err.message).includes('model_not_found')) {
+          console.warn(`[GroqService] Model ${m} is unavailable (${err.message}). Trying next model...`);
+          continue;
         }
       }
     }
@@ -88,8 +92,7 @@ class GroqService {
       'llama-3.1-8b-instant',
       'llama3-70b-8192',
       'llama3-8b-8192',
-      'mixtral-8x7b-32768',
-      'gemma2-9b-it'
+      'mixtral-8x7b-32768'
     ].filter(Boolean);
 
     let lastError = null;
@@ -109,8 +112,8 @@ class GroqService {
         return JSON.parse(responseText);
       } catch (err) {
         lastError = err;
-        if (err.status === 404 || String(err.message).includes('model_not_found')) {
-          console.warn(`[GroqService] Model ${m} not found on this account. Trying next model...`);
+        if (err.status === 404 || err.status === 400 || String(err.message).includes('model_decommissioned') || String(err.message).includes('model_not_found')) {
+          console.warn(`[GroqService] Model ${m} unavailable. Trying next model...`);
           continue;
         }
         throw err;
@@ -131,8 +134,7 @@ class GroqService {
       'llama-3.1-8b-instant',
       'llama3-8b-8192',
       'llama3-70b-8192',
-      'mixtral-8x7b-32768',
-      'gemma2-9b-it'
+      'mixtral-8x7b-32768'
     ].filter(Boolean);
 
     let lastError = null;
@@ -148,8 +150,8 @@ class GroqService {
         return completion.choices[0]?.message?.content || '';
       } catch (err) {
         lastError = err;
-        if (err.status === 404 || String(err.message).includes('model_not_found')) {
-          console.warn(`[GroqService] Model ${m} not found on this account. Trying next model...`);
+        if (err.status === 404 || err.status === 400 || String(err.message).includes('model_decommissioned') || String(err.message).includes('model_not_found')) {
+          console.warn(`[GroqService] Model ${m} unavailable. Trying next model...`);
           continue;
         }
         throw err;
