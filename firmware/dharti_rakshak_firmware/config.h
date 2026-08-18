@@ -54,12 +54,12 @@ const char* const FIRMWARE_VERSION = "2.1.0-CLOUD";
 #define MODBUS_BAUD_RATE 9600     // 9600 bps, 8 Data bits, No Parity, 1 Stop bit
 
 // ============================================================================
-// 4. TIMING & ACQUISITION INTERVALS (Non-blocking)
+// 4. TIMING & ACQUISITION INTERVALS (Ultra-Fast Real-Time Stream)
 // ============================================================================
-const unsigned long SENSOR_READ_INTERVAL_MS = 2000;    // Poll sensor every 2 seconds
-const unsigned long CLOUD_LATEST_SYNC_MS    = 5000;    // Upload latest data to Firebase every 5 seconds
-const unsigned long CLOUD_HISTORY_LOG_MS    = 900000;  // Push historical time-series log every 15 minutes (900,000 ms)
-const unsigned long LCD_CYCLE_INTERVAL_MS   = 3000;    // Rotate LCD page every 3 seconds
-const unsigned long STATUS_HEARTBEAT_MS     = 30000;   // Update device status & RSSI every 30 seconds
+const unsigned long SENSOR_READ_INTERVAL_MS = 800;     // Poll sensor every 800ms (instant soil response)
+const unsigned long CLOUD_LATEST_SYNC_MS    = 1500;    // Upload latest data to Firebase every 1.5 seconds
+const unsigned long CLOUD_HISTORY_LOG_MS    = 300000;  // Push historical log snapshot every 5 minutes
+const unsigned long LCD_CYCLE_INTERVAL_MS   = 2000;    // Rotate LCD page every 2 seconds
+const unsigned long STATUS_HEARTBEAT_MS     = 10000;   // Update device status & RSSI heartbeat every 10 seconds
 
 #endif // CONFIG_H

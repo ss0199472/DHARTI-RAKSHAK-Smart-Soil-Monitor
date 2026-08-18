@@ -48,9 +48,9 @@ class DataStreamService {
       firmwareVersion: "--"
     });
 
-    // Start fast real-time polling (every 2.5 seconds)
+    // Start fast real-time polling (every 1.0 second for instant response)
     this.pollFirebase();
-    setInterval(() => this.pollFirebase(), 2500);
+    setInterval(() => this.pollFirebase(), 1000);
   }
 
   onLatest(callback) {
