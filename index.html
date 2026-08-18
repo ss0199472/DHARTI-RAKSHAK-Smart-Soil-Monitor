@@ -736,14 +736,48 @@
               <line x1="6" y1="6" x2="6.01" y2="6"></line>
               <line x1="6" y1="18" x2="6.01" y2="18"></line>
             </svg>
-            Render Backend & AI Configuration
+            Render Backend & Groq AI Configuration
           </div>
-          <p style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 10px;">
-            Set your deployed Render backend service URL to connect the Groq AI Agronomy Engine and Chatbot.
+          <p style="font-size: 0.78rem; color: var(--text-dim); margin-bottom: 12px;">
+            Configure your Render backend endpoint and manage your Groq Cloud API Key directly from this panel.
           </p>
-          <div>
-            <label style="display: block; font-size: 0.72rem; color: var(--text-dim); margin-bottom: 4px;">Render Backend Service URL</label>
+
+          <!-- Render Backend URL -->
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 0.72rem; color: var(--text-dim); margin-bottom: 4px; font-weight: 700;">Render Backend Service URL</label>
             <input type="text" id="admin-backend-url-input" class="admin-input-text" placeholder="e.g. https://dharti-rakshak-backend.onrender.com" value="http://localhost:5000">
+          </div>
+
+          <!-- Groq API Key Input with Show/Hide -->
+          <div style="margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <label style="font-size: 0.72rem; color: var(--text-dim); font-weight: 700;">Groq API Key (Cloud Llama 3.3)</label>
+              <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" style="font-size: 0.72rem; color: var(--primary-mint); text-decoration: none;">Get Free Groq Key ↗</a>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <input type="password" id="admin-groq-api-key-input" class="admin-input-text" placeholder="gsk_..." style="flex: 1; font-family: var(--font-mono); font-size: 0.82rem;">
+              <button type="button" class="btn-header" id="btn-toggle-groq-key" style="padding: 10px 14px;" title="Show/Hide API Key">
+                👁️
+              </button>
+            </div>
+          </div>
+
+          <!-- Groq AI Model Selection -->
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 0.72rem; color: var(--text-dim); margin-bottom: 4px; font-weight: 700;">Groq AI Model</label>
+            <select id="admin-groq-model-select" class="admin-input-text" style="cursor: pointer; background: var(--bg-surface-elevated); color: var(--text-primary);">
+              <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile (Recommended &bull; Deep Precision Agronomy)</option>
+              <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant (Ultra-Low Latency &bull; Fast)</option>
+              <option value="mixtral-8x7b-32768">Mixtral 8x7B (High Capacity)</option>
+            </select>
+          </div>
+
+          <!-- Test API Key Button & Status -->
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding-top: 6px;">
+            <button class="btn-header" id="btn-test-groq-key" style="background: rgba(16, 185, 129, 0.15); border-color: var(--primary-mint); color: var(--primary-mint); font-size: 0.8rem; padding: 8px 16px;">
+              ⚡ Test Groq API Key
+            </button>
+            <div id="admin-groq-key-status" style="font-size: 0.78rem; font-weight: 600; display: none;"></div>
           </div>
         </div>
 

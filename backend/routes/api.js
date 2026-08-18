@@ -69,11 +69,16 @@ router.get('/api/recommendation/latest', async (req, res) => {
 // 4. Generate AI Recommendation (Trigger Groq AI)
 router.post('/api/recommendation/generate', async (req, res) => {
   try {
-    const { userContext = {}, forceRefresh = true, deviceId = config.deviceId } = req.body || {};
+    const { userContext = {}, forceRefresh = true, deviceId = config.deviceId, groqApiKey, groqModel } = req.body || {};
+    const apiKey = req.headers['x-groq-api-key'] || groqApiKey || null;
+    const model = req.headers['x-groq-model'] || groqModel || null;
+
     const result = await recommendationEngine.generateRecommendation({
       userContext,
       forceRefresh: !!forceRefresh,
-      deviceId
+      deviceId,
+      apiKey,
+      model
     });
 
     if (!result.success) {
@@ -89,7 +94,9 @@ router.post('/api/recommendation/generate', async (req, res) => {
 // 5. AI Chatbot Message
 router.post('/api/chat', async (req, res) => {
   try {
-    const { messages, message, userContext = {}, deviceId = config.deviceId } = req.body || {};
+    const { messages, message, userContext = {}, deviceId = config.deviceId, groqApiKey, groqModel } = req.body || {};
+    const apiKey = req.headers['x-groq-api-key'] || groqApiKey || null;
+    const model = req.headers['x-groq-model'] || groqModel || null;
 
     let chatMessages = messages;
     if (!chatMessages && message) {
@@ -106,7 +113,9 @@ router.post('/api/chat', async (req, res) => {
     const result = await chatbotEngine.processChat({
       messages: chatMessages,
       userContext,
-      deviceId
+      deviceId,
+      apiKey,
+      model
     });
 
     if (!result.success) {
@@ -119,7 +128,51 @@ router.post('/api/chat', async (req, res) => {
   }
 });
 
-// 6. Get Project Information / Metadata
+// 6. Test Groq API Key
+router.post('/api/groq/test-key', async (req, res) => {
+  try {
+    const { groqApiKey, groqModel } = req.body || {};
+    const apiKey = req.headers['x-groq-api-key'] || groqApiKey;
+    const model = req.headers['x-groq-model'] || groqModel || config.groqFastModel || 'llama-3.1-8b-instant';
+
+    if (!apiKey || String(apiKey).trim() === '') {
+      return res.status(400).json({ success: false, error: "Please provide a Groq API Key to test." });
+    }
+
+    const testResult = await groqService.testApiKey(apiKey, model);
+    res.json({
+      success: true,
+      message: "Groq API Key is valid and working!",
+      details: testResult
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      error: `API Key test failed: ${err.message}`
+    });
+  }
+});
+
+// 7. Save Groq Configuration (Admin)
+router.post('/api/admin/groq-config', async (req, res) => {
+  try {
+    const { groqApiKey, groqModel } = req.body || {};
+    const currentConfig = (await firebaseService.getSystemConfig()) || {};
+    
+    if (groqApiKey !== undefined) currentConfig.groq_api_key = String(groqApiKey).trim();
+    if (groqModel !== undefined) currentConfig.groq_model = String(groqModel).trim();
+
+    const saved = await firebaseService.saveSystemConfig(currentConfig);
+    if (groqApiKey) {
+      groqService.initClient(groqApiKey);
+    }
+    res.json({ success: saved, message: "Groq configuration updated successfully." });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 8. Get Project Information / Metadata
 router.get('/api/project-info', async (req, res) => {
   try {
     const meta = await firebaseService.getProjectMetadata();
@@ -129,7 +182,7 @@ router.get('/api/project-info', async (req, res) => {
   }
 });
 
-// 7. Update Project Information / Metadata (Admin)
+// 9. Update Project Information / Metadata (Admin)
 router.put('/api/project-info', async (req, res) => {
   try {
     const metadata = req.body;

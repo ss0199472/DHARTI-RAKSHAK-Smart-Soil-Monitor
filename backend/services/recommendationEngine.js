@@ -249,7 +249,7 @@ Respond strictly with a JSON object adhering to this schema:
 }`;
   }
 
-  async generateRecommendation({ userContext = {}, forceRefresh = false, deviceId = config.deviceId } = {}) {
+  async generateRecommendation({ userContext = {}, forceRefresh = false, deviceId = config.deviceId, apiKey = null, model = null } = {}) {
     const now = Date.now();
 
     // Check Debounce Cache if not forced
@@ -261,11 +261,15 @@ Respond strictly with a JSON object adhering to this schema:
       };
     }
 
-    // 1. Fetch live telemetry and status from Firebase
-    const [latestData, deviceStatus] = await Promise.all([
+    // 1. Fetch live telemetry, status, and system_config from Firebase
+    const [latestData, deviceStatus, systemConfig] = await Promise.all([
       firebaseService.getLatestTelemetry(deviceId),
-      firebaseService.getDeviceStatus(deviceId)
+      firebaseService.getDeviceStatus(deviceId),
+      firebaseService.getSystemConfig()
     ]);
+
+    const activeApiKey = apiKey || systemConfig?.groq_api_key || config.groqApiKey;
+    const activeModel = model || systemConfig?.groq_model || config.groqModel || 'llama-3.3-70b-versatile';
 
     // 2. Validate Telemetry
     const validation = this.validateTelemetry(latestData, deviceStatus);
@@ -278,12 +282,34 @@ Respond strictly with a JSON object adhering to this schema:
       };
     }
 
-    // 3. Check Groq Configuration
-    if (!groqService.isConfigured()) {
+    // 3. Check Groq Configuration (Fallback to local rule-based engine if missing)
+    if (!groqService.isConfigured(activeApiKey)) {
+      console.warn('[RecommendationEngine] Groq API Key missing. Using local rule-based agronomy evaluation.');
+      const localEval = this.generateRuleBasedEvaluation(latestData);
+      const fallbackRecommendation = {
+        timestamp: Date.now(),
+        deviceId: deviceId,
+        ...localEval,
+        dataUsed: {
+          nitrogen: latestData.nitrogen,
+          phosphorus: latestData.phosphorus,
+          potassium: latestData.potassium,
+          totalNPK: latestData.totalNPK || (latestData.nitrogen + latestData.phosphorus + latestData.potassium),
+          moisture: latestData.moisture,
+          temperature: latestData.temperature,
+          ph: latestData.ph,
+          sensorTimestamp: latestData.timestamp || null
+        },
+        model: "Dharti Heuristic Rule Engine (Offline Fallback)",
+        generatedAt: new Date().toISOString()
+      };
+      await firebaseService.saveAiRecommendation(fallbackRecommendation, deviceId);
+      this.lastGeneratedRecommendation = fallbackRecommendation;
+      this.lastGenerationTime = now;
       return {
-        success: false,
-        error: "GROQ_API_KEY is not configured on the Render backend. Set GROQ_API_KEY in Render environment variables.",
-        code: "GROQ_KEY_MISSING"
+        success: true,
+        source: 'local_heuristics',
+        recommendation: fallbackRecommendation
       };
     }
 
@@ -295,8 +321,9 @@ Respond strictly with a JSON object adhering to this schema:
       const aiResult = await groqService.generateStructuredJson({
         systemPrompt,
         userPrompt,
-        model: config.groqModel,
-        temperature: 0.2
+        model: activeModel,
+        temperature: 0.2,
+        apiKey: activeApiKey
       });
 
       // 5. Structure finalized payload

@@ -29,6 +29,8 @@ class DhartiApp {
       team_name: "Royal Challenger Kanpur",
       admin_pin: "1234",
       backend_url: localStorage.getItem('dharti_backend_url') || 'http://localhost:5000',
+      groq_api_key: localStorage.getItem('dharti_groq_api_key') || '',
+      groq_model: localStorage.getItem('dharti_groq_model') || 'llama-3.3-70b-versatile',
       team_members: [
         { id: "m1", name: "Namit Kumar", visible: true },
         { id: "m2", name: "Sanidhya Krishna Yadav", visible: true },
@@ -47,8 +49,10 @@ class DhartiApp {
     // 2. Initialize Analytics Charts, AI Engine, and Chatbot
     analyticsManager.initialize();
     aiEngine.setBackendUrl(this.systemConfig.backend_url);
+    aiEngine.setGroqConfig(this.systemConfig.groq_api_key, this.systemConfig.groq_model);
     aiEngine.init();
     dhartiChatbot.setBackendUrl(this.systemConfig.backend_url);
+    dhartiChatbot.setGroqConfig(this.systemConfig.groq_api_key, this.systemConfig.groq_model);
     dhartiChatbot.init();
 
     // 3. Attach Event Handlers (Admin + UI)
@@ -370,6 +374,71 @@ class DhartiApp {
       });
     }
 
+    // Toggle Groq Key Visibility
+    const toggleGroqKeyBtn = document.getElementById('btn-toggle-groq-key');
+    const groqKeyInput = document.getElementById('admin-groq-api-key-input');
+    if (toggleGroqKeyBtn && groqKeyInput) {
+      toggleGroqKeyBtn.addEventListener('click', () => {
+        if (groqKeyInput.type === 'password') {
+          groqKeyInput.type = 'text';
+          toggleGroqKeyBtn.innerText = '🙈';
+        } else {
+          groqKeyInput.type = 'password';
+          toggleGroqKeyBtn.innerText = '👁️';
+        }
+      });
+    }
+
+    // Test Groq API Key
+    const testGroqBtn = document.getElementById('btn-test-groq-key');
+    const groqStatusEl = document.getElementById('admin-groq-key-status');
+    if (testGroqBtn && groqStatusEl) {
+      testGroqBtn.addEventListener('click', async () => {
+        const keyVal = groqKeyInput ? groqKeyInput.value.trim() : '';
+        const modelSelect = document.getElementById('admin-groq-model-select');
+        const modelVal = modelSelect ? modelSelect.value : 'llama-3.3-70b-versatile';
+        const backendUrl = (document.getElementById('admin-backend-url-input')?.value.trim() || this.systemConfig.backend_url || 'http://localhost:5000').replace(/\/+$/, '');
+
+        if (!keyVal) {
+          groqStatusEl.style.display = 'block';
+          groqStatusEl.style.color = '#f87171';
+          groqStatusEl.innerHTML = '⚠️ Please enter a Groq API Key to test.';
+          return;
+        }
+
+        testGroqBtn.disabled = true;
+        testGroqBtn.innerHTML = '<span class="spinner-inline"></span> Testing...';
+        groqStatusEl.style.display = 'block';
+        groqStatusEl.style.color = '#fbbf24';
+        groqStatusEl.innerHTML = 'Connecting to Groq Cloud...';
+
+        try {
+          const res = await fetch(`${backendUrl}/api/groq/test-key`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              groqApiKey: keyVal,
+              groqModel: modelVal
+            })
+          });
+          const resData = await res.json();
+          if (res.ok && resData.success) {
+            groqStatusEl.style.color = '#34d399';
+            groqStatusEl.innerHTML = '✅ Groq API Key is valid & connected!';
+          } else {
+            groqStatusEl.style.color = '#f87171';
+            groqStatusEl.innerHTML = `❌ ${resData.error || 'Failed to verify key.'}`;
+          }
+        } catch (err) {
+          groqStatusEl.style.color = '#f87171';
+          groqStatusEl.innerHTML = `❌ Connection Error: ${err.message}`;
+        } finally {
+          testGroqBtn.disabled = false;
+          testGroqBtn.innerHTML = '⚡ Test Groq API Key';
+        }
+      });
+    }
+
     // Save All
     if (saveAllBtn) {
       saveAllBtn.addEventListener('click', () => {
@@ -380,6 +449,8 @@ class DhartiApp {
         const teamNameInput = document.getElementById('admin-team-name-input');
         const maintMsgInput = document.getElementById('admin-maintenance-msg-input');
         const backendUrlInput = document.getElementById('admin-backend-url-input');
+        const groqKeyInputEl = document.getElementById('admin-groq-api-key-input');
+        const groqModelSelectEl = document.getElementById('admin-groq-model-select');
 
         if (siteOnlineToggle) this.systemConfig.site_online = siteOnlineToggle.checked;
         if (showTeamToggle) this.systemConfig.show_team = showTeamToggle.checked;
@@ -393,6 +464,19 @@ class DhartiApp {
           aiEngine.setBackendUrl(bUrl);
           dhartiChatbot.setBackendUrl(bUrl);
         }
+        if (groqKeyInputEl) {
+          const keyVal = groqKeyInputEl.value.trim();
+          this.systemConfig.groq_api_key = keyVal;
+          localStorage.setItem('dharti_groq_api_key', keyVal);
+        }
+        if (groqModelSelectEl) {
+          const modelVal = groqModelSelectEl.value.trim();
+          this.systemConfig.groq_model = modelVal;
+          localStorage.setItem('dharti_groq_model', modelVal);
+        }
+
+        aiEngine.setGroqConfig(this.systemConfig.groq_api_key, this.systemConfig.groq_model);
+        dhartiChatbot.setGroqConfig(this.systemConfig.groq_api_key, this.systemConfig.groq_model);
 
         this.saveSystemConfig();
       });
@@ -419,6 +503,8 @@ class DhartiApp {
     const teamNameInput = document.getElementById('admin-team-name-input');
     const maintMsgInput = document.getElementById('admin-maintenance-msg-input');
     const backendUrlInput = document.getElementById('admin-backend-url-input');
+    const groqKeyInput = document.getElementById('admin-groq-api-key-input');
+    const groqModelSelect = document.getElementById('admin-groq-model-select');
 
     if (siteOnlineToggle) siteOnlineToggle.checked = (this.systemConfig.site_online !== false);
     if (showTeamToggle) showTeamToggle.checked = (this.systemConfig.show_team !== false);
@@ -426,6 +512,8 @@ class DhartiApp {
     if (teamNameInput) teamNameInput.value = this.systemConfig.team_name || "Royal Challenger Kanpur";
     if (maintMsgInput) maintMsgInput.value = this.systemConfig.maintenance_msg || "";
     if (backendUrlInput) backendUrlInput.value = this.systemConfig.backend_url || localStorage.getItem('dharti_backend_url') || 'http://localhost:5000';
+    if (groqKeyInput) groqKeyInput.value = this.systemConfig.groq_api_key || localStorage.getItem('dharti_groq_api_key') || '';
+    if (groqModelSelect) groqModelSelect.value = this.systemConfig.groq_model || localStorage.getItem('dharti_groq_model') || 'llama-3.3-70b-versatile';
 
     this.populateAdminTeamList();
   }

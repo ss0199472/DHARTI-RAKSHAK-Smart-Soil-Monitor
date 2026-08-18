@@ -27,6 +27,11 @@ export class DhartiAiEngine {
     localStorage.setItem('dharti_backend_url', this.backendUrl);
   }
 
+  setGroqConfig(apiKey, model) {
+    this.groqApiKey = (apiKey !== undefined ? apiKey : (localStorage.getItem('dharti_groq_api_key') || '')).trim();
+    this.groqModel = (model !== undefined ? model : (localStorage.getItem('dharti_groq_model') || 'llama-3.3-70b-versatile')).trim();
+  }
+
   init() {
     if (this.analyzeBtn) {
       this.analyzeBtn.addEventListener('click', () => this.triggerGroqAnalysis(true));
@@ -59,35 +64,29 @@ export class DhartiAiEngine {
     // 1. Calculate Multi-Factor Soil Health Index (0 - 100)
     let score = 100;
 
-    // pH Factor (Ideal: 6.0 - 7.5)
-    if (ph < 6.0) score -= Math.min(25, (6.0 - ph) * 15);
-    else if (ph > 7.5) score -= Math.min(25, (ph - 7.5) * 15);
+    // NPK Deductions
+    if (nitrogen < 20) score -= 12;
+    if (phosphorus < 15) score -= 10;
+    if (potassium < 80) score -= 10;
 
-    // Moisture Factor (Ideal: 25% - 45%)
-    if (moisture < 25.0) score -= Math.min(25, (25.0 - moisture) * 1.2);
-    else if (moisture > 50.0) score -= Math.min(25, (moisture - 50.0) * 1.2);
+    // Moisture Deductions (Target 25 - 45%)
+    if (moisture < 20) score -= 15;
+    else if (moisture > 60) score -= 10;
 
-    // NPK Factor (Ideal Total > 120)
-    if (totalNPK < 100) score -= 25;
-    else if (totalNPK < 150) score -= 10;
+    // pH Deductions (Target 6.0 - 7.5)
+    if (ph < 5.5 || ph > 8.0) score -= 18;
+    else if (ph < 6.0 || ph > 7.5) score -= 8;
 
-    if (nitrogen < 25) score -= 8;
-    if (phosphorus < 20) score -= 8;
-    if (potassium < 80) score -= 8;
+    score = Math.max(10, Math.min(100, Math.round(score)));
 
-    score = Math.max(15, Math.min(99, Math.round(score)));
-
+    // Update UI Score Elements
     if (this.scoreElement) {
-      this.scoreElement.innerText = `${score}/100`;
-      this.scoreElement.style.color = score > 75 ? '#34d399' : (score > 50 ? '#fbbf24' : '#f87171');
+      this.scoreElement.innerText = `${score} / 100`;
+      this.scoreElement.style.color = score >= 75 ? '#34d399' : score >= 50 ? '#fbbf24' : '#f87171';
     }
     if (this.scoreBadge) {
       this.scoreBadge.innerText = `${score} / 100`;
-    }
-
-    // If no cloud recommendation is currently loaded, display fast heuristic insights
-    if (!this.currentRecommendation) {
-      this.renderLocalHeuristics(data);
+      this.scoreBadge.style.color = score >= 75 ? '#34d399' : score >= 50 ? '#fbbf24' : '#f87171';
     }
   }
 
@@ -103,12 +102,18 @@ export class DhartiAiEngine {
     }
 
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (this.groqApiKey) headers['x-groq-api-key'] = this.groqApiKey;
+      if (this.groqModel) headers['x-groq-model'] = this.groqModel;
+
       const response = await fetch(`${this.backendUrl}/api/recommendation/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           deviceId: 'dharti-node-01',
-          forceRefresh: force
+          forceRefresh: force,
+          groqApiKey: this.groqApiKey || undefined,
+          groqModel: this.groqModel || undefined
         })
       });
 

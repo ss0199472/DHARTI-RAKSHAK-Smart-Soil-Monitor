@@ -18,6 +18,11 @@ export class DhartiChatbot {
     localStorage.setItem('dharti_backend_url', this.backendUrl);
   }
 
+  setGroqConfig(apiKey, model) {
+    this.groqApiKey = (apiKey !== undefined ? apiKey : (localStorage.getItem('dharti_groq_api_key') || '')).trim();
+    this.groqModel = (model !== undefined ? model : (localStorage.getItem('dharti_groq_model') || 'llama-3.3-70b-versatile')).trim();
+  }
+
   init() {
     this.cacheDom();
     this.attachEvents();
@@ -68,7 +73,7 @@ export class DhartiChatbot {
         if (pill) {
           const query = pill.getAttribute('data-query');
           if (query) {
-            this.sendUserMessage(query);
+            this.sendUserPrompt(query);
           }
         }
       });
@@ -78,18 +83,18 @@ export class DhartiChatbot {
   toggleChat() {
     this.isOpen = !this.isOpen;
     if (this.chatWindow) {
-      if (this.isOpen) {
-        this.chatWindow.classList.add('active');
-        if (this.inputField) this.inputField.focus();
-      } else {
-        this.chatWindow.classList.remove('active');
+      this.chatWindow.classList.toggle('active', this.isOpen);
+      if (this.isOpen && this.inputField) {
+        setTimeout(() => this.inputField.focus(), 150);
       }
     }
   }
 
   closeChat() {
     this.isOpen = false;
-    if (this.chatWindow) this.chatWindow.classList.remove('active');
+    if (this.chatWindow) {
+      this.chatWindow.classList.remove('active');
+    }
   }
 
   resetChat() {
@@ -101,31 +106,23 @@ export class DhartiChatbot {
   }
 
   renderInitialMessage() {
-    const welcomeHtml = `
-      <div class="chat-msg chat-msg-ai">
-        <div class="chat-avatar">🌱</div>
-        <div class="chat-bubble">
-          <p><strong>Namaste! I am Dharti AI</strong> 🌿</p>
-          <p>Your intelligent agronomy & project assistant for <strong>Dharti Rakshak</strong>. I have real-time access to your RS-485 Modbus soil telemetry and project details.</p>
-          <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 6px;">How can I assist your farm today?</p>
-        </div>
-      </div>
-    `;
-    if (this.messagesContainer) {
-      this.messagesContainer.innerHTML = welcomeHtml;
+    const welcomeMsg = `👋 <strong>Namaste! I am Dharti AI.</strong><br>I am your precision agronomy assistant connected to your live soil sensors and hardware. Ask me anything about your <strong>NPK nutrients, pH, moisture, crop suitability</strong>, or project specifications!`;
+    this.appendMessage('ai', welcomeMsg);
+  }
+
+  sendUserPrompt(text) {
+    if (this.inputField) {
+      this.inputField.value = text;
     }
+    this.handleSendMessage();
   }
 
-  handleSendMessage() {
+  async handleSendMessage() {
     if (!this.inputField) return;
-    const text = this.inputField.value.trim();
-    if (!text || this.isProcessing) return;
-    this.inputField.value = '';
-    this.sendUserMessage(text);
-  }
+    const userText = this.inputField.value.trim();
+    if (!userText || this.isProcessing) return;
 
-  async sendUserMessage(userText) {
-    if (this.isProcessing) return;
+    this.inputField.value = '';
     this.isProcessing = true;
 
     // 1. Append user message to UI
@@ -137,12 +134,18 @@ export class DhartiChatbot {
 
     try {
       // 3. Send request to Render backend
+      const headers = { 'Content-Type': 'application/json' };
+      if (this.groqApiKey) headers['x-groq-api-key'] = this.groqApiKey;
+      if (this.groqModel) headers['x-groq-model'] = this.groqModel;
+
       const response = await fetch(`${this.backendUrl}/api/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           messages: this.messages,
-          deviceId: 'dharti-node-01'
+          deviceId: 'dharti-node-01',
+          groqApiKey: this.groqApiKey || undefined,
+          groqModel: this.groqModel || undefined
         })
       });
 

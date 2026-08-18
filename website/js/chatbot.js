@@ -18,6 +18,11 @@ export class DhartiChatbot {
     localStorage.setItem('dharti_backend_url', this.backendUrl);
   }
 
+  setGroqConfig(apiKey, model) {
+    this.groqApiKey = (apiKey !== undefined ? apiKey : (localStorage.getItem('dharti_groq_api_key') || '')).trim();
+    this.groqModel = (model !== undefined ? model : (localStorage.getItem('dharti_groq_model') || 'llama-3.3-70b-versatile')).trim();
+  }
+
   init() {
     this.cacheDom();
     this.attachEvents();
@@ -137,12 +142,18 @@ export class DhartiChatbot {
 
     try {
       // 3. Send request to Render backend
+      const headers = { 'Content-Type': 'application/json' };
+      if (this.groqApiKey) headers['x-groq-api-key'] = this.groqApiKey;
+      if (this.groqModel) headers['x-groq-model'] = this.groqModel;
+
       const response = await fetch(`${this.backendUrl}/api/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           messages: this.messages,
-          deviceId: 'dharti-node-01'
+          deviceId: 'dharti-node-01',
+          groqApiKey: this.groqApiKey || undefined,
+          groqModel: this.groqModel || undefined
         })
       });
 

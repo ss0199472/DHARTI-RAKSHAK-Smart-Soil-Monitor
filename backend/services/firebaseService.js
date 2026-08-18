@@ -100,6 +100,31 @@ class FirebaseService {
       return false;
     }
   }
+
+  async getSystemConfig() {
+    try {
+      const res = await fetch(this._buildUrl(`/system_config`));
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (err) {
+      console.error('[Firebase] Error fetching system_config:', err.message);
+      return null;
+    }
+  }
+
+  async saveSystemConfig(systemConfig) {
+    try {
+      const res = await fetch(this._buildUrl(`/system_config`), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(systemConfig)
+      });
+      return res.ok;
+    } catch (err) {
+      console.error('[Firebase] Error saving system_config:', err.message);
+      return false;
+    }
+  }
 }
 
 export const firebaseService = new FirebaseService();

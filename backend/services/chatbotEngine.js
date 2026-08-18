@@ -79,11 +79,15 @@ ${latestRec ? `
 6. Support Hindi (हिन्दी) or English depending on how the user greets or asks you.`;
   }
 
-  async processChat({ messages, userContext = {}, deviceId = config.deviceId }) {
-    if (!groqService.isConfigured()) {
+  async processChat({ messages, userContext = {}, deviceId = config.deviceId, apiKey = null, model = null }) {
+    const systemConfig = await firebaseService.getSystemConfig();
+    const activeApiKey = apiKey || systemConfig?.groq_api_key || config.groqApiKey;
+    const activeModel = model || systemConfig?.groq_model || config.groqModel || 'llama-3.3-70b-versatile';
+
+    if (!groqService.isConfigured(activeApiKey)) {
       return {
         success: false,
-        error: "GROQ_API_KEY is not configured on the server. Please set GROQ_API_KEY in Render environment variables."
+        error: "GROQ_API_KEY is not configured. Please enter your Groq API Key in the Admin Panel or set GROQ_API_KEY on the Render server."
       };
     }
 
@@ -109,15 +113,16 @@ ${latestRec ? `
 
       const reply = await groqService.generateChatResponse({
         messages: sanitizedMessages,
-        model: config.groqModel,
+        model: activeModel,
         temperature: 0.5,
-        maxTokens: 1024
+        maxTokens: 1024,
+        apiKey: activeApiKey
       });
 
       return {
         success: true,
         reply: reply,
-        model: config.groqModel,
+        model: activeModel,
         timestamp: Date.now()
       };
     } catch (err) {
