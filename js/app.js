@@ -55,8 +55,8 @@ class DhartiApp {
     dataStream.initialize();
 
     dataStream.onLatest((latest) => {
-      this.currentLatest = latest;
-      if (latest && latest.hasData) {
+      if (latest && latest.hasData && this.isDeviceOnline) {
+        this.currentLatest = latest;
         this.updateSensorCards(latest);
         this.updateHeroDiagnostics(latest);
         this.updateCropSuitability(latest);
@@ -64,7 +64,9 @@ class DhartiApp {
         analyticsManager.updateLiveNpk(latest.nitrogen, latest.phosphorus, latest.potassium);
         aiEngine.evaluateTelemetry(latest);
       } else {
+        this.currentLatest = null;
         this.renderOfflineState();
+        analyticsManager.updateLiveNpk(0, 0, 0);
       }
     });
 
@@ -77,8 +79,10 @@ class DhartiApp {
     dataStream.onStatus((status) => {
       this.isDeviceOnline = status.online;
       this.updateDeviceStatus(status);
-      if (!status.online && !this.currentLatest) {
+      if (!status.online) {
+        this.currentLatest = null;
         this.renderOfflineState();
+        analyticsManager.updateLiveNpk(0, 0, 0);
       }
     });
 
