@@ -43,41 +43,29 @@ class GroqService {
       throw new Error("No API key provided to test.");
     }
     const testClient = new Groq({ apiKey: apiKey.trim() });
-    const modelsToTry = [
-      model,
-      'llama-3.3-70b-versatile',
-      'llama-3.1-8b-instant',
-      'llama3-8b-8192',
-      'llama3-70b-8192',
-      'mixtral-8x7b-32768'
-    ].filter(Boolean);
 
-    let lastError = null;
-    for (const m of modelsToTry) {
-      try {
-        const completion = await testClient.chat.completions.create({
-          messages: [{ role: 'user', content: 'Say "OK" in 1 word.' }],
-          model: m,
-          max_tokens: 5
-        });
-        return {
-          valid: true,
-          modelUsed: m,
-          response: completion.choices[0]?.message?.content?.trim() || 'OK'
-        };
-      } catch (err) {
-        lastError = err;
-        if (err.status === 401 || String(err.message).includes('invalid_api_key')) {
-          throw err; // Invalid key should fail immediately
-        }
-        // If decommissioned or not found, try next candidate
-        if (err.status === 404 || err.status === 400 || String(err.message).includes('model_decommissioned') || String(err.message).includes('model_not_found')) {
-          console.warn(`[GroqService] Model ${m} is unavailable (${err.message}). Trying next model...`);
-          continue;
-        }
+    try {
+      // 1. Validate credentials against Groq Models API
+      const modelsList = await testClient.models.list();
+      const availableModelIds = Array.isArray(modelsList?.data) ? modelsList.data.map(m => m.id) : [];
+
+      // 2. Select working active model
+      const preferredModel = (model && availableModelIds.includes(model))
+        ? model
+        : (availableModelIds.find(id => id.includes('llama-3.3') || id.includes('llama-3.1') || id.includes('llama-3.2') || id.includes('qwen') || id.includes('deepseek')) || availableModelIds[0] || 'llama-3.3-70b-versatile');
+
+      return {
+        valid: true,
+        modelUsed: preferredModel,
+        availableModelsCount: availableModelIds.length,
+        response: 'Groq API Key Verified Successfully'
+      };
+    } catch (err) {
+      if (err.status === 401 || String(err.message).includes('invalid_api_key')) {
+        throw new Error("Invalid Groq API Key. Please verify your key at https://console.groq.com/keys");
       }
+      throw err;
     }
-    throw lastError || new Error("Failed to connect with available Groq models.");
   }
 
   async generateStructuredJson({ systemPrompt, userPrompt, model = config.groqModel, temperature = 0.2, apiKey = null }) {
@@ -90,9 +78,10 @@ class GroqService {
       model,
       'llama-3.3-70b-versatile',
       'llama-3.1-8b-instant',
-      'llama3-70b-8192',
-      'llama3-8b-8192',
-      'mixtral-8x7b-32768'
+      'llama-3.2-3b-preview',
+      'llama-3.2-1b-preview',
+      'deepseek-r1-distill-llama-70b',
+      'qwen-2.5-32b'
     ].filter(Boolean);
 
     let lastError = null;
@@ -132,9 +121,10 @@ class GroqService {
       model,
       'llama-3.3-70b-versatile',
       'llama-3.1-8b-instant',
-      'llama3-8b-8192',
-      'llama3-70b-8192',
-      'mixtral-8x7b-32768'
+      'llama-3.2-3b-preview',
+      'llama-3.2-1b-preview',
+      'deepseek-r1-distill-llama-70b',
+      'qwen-2.5-32b'
     ].filter(Boolean);
 
     let lastError = null;
