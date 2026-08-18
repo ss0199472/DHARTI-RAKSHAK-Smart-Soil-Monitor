@@ -38,21 +38,42 @@ class GroqService {
     return !!this.client || (!!config.groqApiKey && config.groqApiKey.trim() !== '');
   }
 
-  async testApiKey(apiKey, model = config.groqModel) {
+  async testApiKey(apiKey, model = null) {
     if (!apiKey || apiKey.trim() === '') {
       throw new Error("No API key provided to test.");
     }
     const testClient = new Groq({ apiKey: apiKey.trim() });
-    const completion = await testClient.chat.completions.create({
-      messages: [{ role: 'user', content: 'Say "OK" in 1 word.' }],
-      model: model || config.groqFastModel || 'llama-3.1-8b-instant',
-      max_tokens: 5
-    });
-    return {
-      valid: true,
-      modelUsed: model,
-      response: completion.choices[0]?.message?.content?.trim() || 'OK'
-    };
+    const modelsToTry = [
+      model,
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
+      'llama3-8b-8192',
+      'llama3-70b-8192',
+      'mixtral-8x7b-32768',
+      'gemma2-9b-it'
+    ].filter(Boolean);
+
+    let lastError = null;
+    for (const m of modelsToTry) {
+      try {
+        const completion = await testClient.chat.completions.create({
+          messages: [{ role: 'user', content: 'Say "OK" in 1 word.' }],
+          model: m,
+          max_tokens: 5
+        });
+        return {
+          valid: true,
+          modelUsed: m,
+          response: completion.choices[0]?.message?.content?.trim() || 'OK'
+        };
+      } catch (err) {
+        lastError = err;
+        if (err.status === 401 || String(err.message).includes('invalid_api_key')) {
+          throw err; // Invalid key should immediately fail
+        }
+      }
+    }
+    throw lastError || new Error("Failed to connect with available Groq models.");
   }
 
   async generateStructuredJson({ systemPrompt, userPrompt, model = config.groqModel, temperature = 0.2, apiKey = null }) {
@@ -61,23 +82,41 @@ class GroqService {
       throw new Error('GROQ_API_KEY is not configured. Please set a Groq API Key in the Admin Panel or environment variables.');
     }
 
-    try {
-      const completion = await client.chat.completions.create({
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        model: model || config.groqModel,
-        temperature: temperature,
-        response_format: { type: 'json_object' }
-      });
+    const modelsToTry = [
+      model,
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
+      'llama3-70b-8192',
+      'llama3-8b-8192',
+      'mixtral-8x7b-32768',
+      'gemma2-9b-it'
+    ].filter(Boolean);
 
-      const responseText = completion.choices[0]?.message?.content || '{}';
-      return JSON.parse(responseText);
-    } catch (err) {
-      console.error('[GroqService] JSON generation failed:', err.message);
-      throw err;
+    let lastError = null;
+    for (const m of modelsToTry) {
+      try {
+        const completion = await client.chat.completions.create({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          model: m,
+          temperature: temperature,
+          response_format: { type: 'json_object' }
+        });
+
+        const responseText = completion.choices[0]?.message?.content || '{}';
+        return JSON.parse(responseText);
+      } catch (err) {
+        lastError = err;
+        if (err.status === 404 || String(err.message).includes('model_not_found')) {
+          console.warn(`[GroqService] Model ${m} not found on this account. Trying next model...`);
+          continue;
+        }
+        throw err;
+      }
     }
+    throw lastError || new Error("All Groq candidate models failed.");
   }
 
   async generateChatResponse({ messages, model = config.groqModel, temperature = 0.5, maxTokens = 1024, apiKey = null }) {
@@ -86,19 +125,37 @@ class GroqService {
       throw new Error('GROQ_API_KEY is not configured. Please set a Groq API Key in the Admin Panel or environment variables.');
     }
 
-    try {
-      const completion = await client.chat.completions.create({
-        messages: messages,
-        model: model || config.groqModel,
-        temperature: temperature,
-        max_tokens: maxTokens
-      });
+    const modelsToTry = [
+      model,
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
+      'llama3-8b-8192',
+      'llama3-70b-8192',
+      'mixtral-8x7b-32768',
+      'gemma2-9b-it'
+    ].filter(Boolean);
 
-      return completion.choices[0]?.message?.content || '';
-    } catch (err) {
-      console.error('[GroqService] Chat completion failed:', err.message);
-      throw err;
+    let lastError = null;
+    for (const m of modelsToTry) {
+      try {
+        const completion = await client.chat.completions.create({
+          messages: messages,
+          model: m,
+          temperature: temperature,
+          max_tokens: maxTokens
+        });
+
+        return completion.choices[0]?.message?.content || '';
+      } catch (err) {
+        lastError = err;
+        if (err.status === 404 || String(err.message).includes('model_not_found')) {
+          console.warn(`[GroqService] Model ${m} not found on this account. Trying next model...`);
+          continue;
+        }
+        throw err;
+      }
     }
+    throw lastError || new Error("All Groq candidate models failed.");
   }
 }
 
