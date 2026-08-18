@@ -14,6 +14,9 @@ import apiRoutes from './routes/api.js';
 
 const app = express();
 
+// Trust proxy for Render / Cloudflare reverse proxies
+app.set('trust proxy', 1);
+
 // 1. Security Headers
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
@@ -27,7 +30,7 @@ const allowedOrigins = config.corsOrigin === '*'
 app.use(cors({
   origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-groq-api-key', 'x-groq-model']
 }));
 
 // 3. Request Body Parser

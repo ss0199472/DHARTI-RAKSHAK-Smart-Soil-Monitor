@@ -28,7 +28,9 @@ class DhartiApp {
       show_team_name: true,
       team_name: "Royal Challenger Kanpur",
       admin_pin: "1234",
-      backend_url: localStorage.getItem('dharti_backend_url') || 'http://localhost:5000',
+      backend_url: (localStorage.getItem('dharti_backend_url') && localStorage.getItem('dharti_backend_url') !== 'http://localhost:5000') 
+        ? localStorage.getItem('dharti_backend_url') 
+        : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:5000' : 'https://dharti-rakshak-backend.onrender.com'),
       groq_api_key: localStorage.getItem('dharti_groq_api_key') || '',
       groq_model: localStorage.getItem('dharti_groq_model') || 'llama-3.3-70b-versatile',
       team_members: [

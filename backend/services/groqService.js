@@ -68,14 +68,44 @@ class GroqService {
     }
   }
 
-  async generateStructuredJson({ systemPrompt, userPrompt, model = config.groqModel, temperature = 0.2, apiKey = null }) {
-    const client = this.getClient(apiKey);
-    if (!client) {
-      throw new Error('GROQ_API_KEY is not configured. Please set a Groq API Key in the Admin Panel or environment variables.');
+  async getCandidateModels(client, requestedModel = null) {
+    try {
+      const list = await client.models.list();
+      const ids = (list?.data || [])
+        .map(m => m.id)
+        .filter(id => !id.includes('whisper') && !id.includes('guard') && !id.includes('embedding') && !id.includes('tts') && !id.includes('vision'));
+      
+      const candidates = [];
+      if (requestedModel && ids.includes(requestedModel)) candidates.push(requestedModel);
+      
+      // Preferred active Groq models in priority order
+      const priorityOrder = [
+        'llama-3.3-70b-versatile',
+        'llama-3.1-8b-instant',
+        'llama-3.2-3b-preview',
+        'llama-3.2-1b-preview',
+        'deepseek-r1-distill-llama-70b',
+        'qwen-2.5-32b'
+      ];
+
+      for (const p of priorityOrder) {
+        if (ids.includes(p) && !candidates.includes(p)) {
+          candidates.push(p);
+        }
+      }
+
+      // Add remaining models
+      for (const id of ids) {
+        if (!candidates.includes(id)) candidates.push(id);
+      }
+
+      if (candidates.length > 0) return candidates;
+    } catch (e) {
+      console.warn('[GroqService] Dynamic model listing fallback:', e.message);
     }
 
-    const modelsToTry = [
-      model,
+    return [
+      requestedModel,
       'llama-3.3-70b-versatile',
       'llama-3.1-8b-instant',
       'llama-3.2-3b-preview',
@@ -83,8 +113,17 @@ class GroqService {
       'deepseek-r1-distill-llama-70b',
       'qwen-2.5-32b'
     ].filter(Boolean);
+  }
 
+  async generateStructuredJson({ systemPrompt, userPrompt, model = config.groqModel, temperature = 0.2, apiKey = null }) {
+    const client = this.getClient(apiKey);
+    if (!client) {
+      throw new Error('GROQ_API_KEY is not configured. Please set a Groq API Key in the Admin Panel or environment variables.');
+    }
+
+    const modelsToTry = await this.getCandidateModels(client, model);
     let lastError = null;
+
     for (const m of modelsToTry) {
       try {
         const completion = await client.chat.completions.create({
@@ -102,7 +141,7 @@ class GroqService {
       } catch (err) {
         lastError = err;
         if (err.status === 404 || err.status === 400 || String(err.message).includes('model_decommissioned') || String(err.message).includes('model_not_found')) {
-          console.warn(`[GroqService] Model ${m} unavailable. Trying next model...`);
+          console.warn(`[GroqService] Model ${m} unavailable (${err.message}). Trying next model...`);
           continue;
         }
         throw err;
@@ -117,17 +156,9 @@ class GroqService {
       throw new Error('GROQ_API_KEY is not configured. Please set a Groq API Key in the Admin Panel or environment variables.');
     }
 
-    const modelsToTry = [
-      model,
-      'llama-3.3-70b-versatile',
-      'llama-3.1-8b-instant',
-      'llama-3.2-3b-preview',
-      'llama-3.2-1b-preview',
-      'deepseek-r1-distill-llama-70b',
-      'qwen-2.5-32b'
-    ].filter(Boolean);
-
+    const modelsToTry = await this.getCandidateModels(client, model);
     let lastError = null;
+
     for (const m of modelsToTry) {
       try {
         const completion = await client.chat.completions.create({
@@ -141,7 +172,7 @@ class GroqService {
       } catch (err) {
         lastError = err;
         if (err.status === 404 || err.status === 400 || String(err.message).includes('model_decommissioned') || String(err.message).includes('model_not_found')) {
-          console.warn(`[GroqService] Model ${m} unavailable. Trying next model...`);
+          console.warn(`[GroqService] Model ${m} unavailable (${err.message}). Trying next model...`);
           continue;
         }
         throw err;
