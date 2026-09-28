@@ -94,7 +94,7 @@ router.post('/api/recommendation/generate', async (req, res) => {
 // 5. AI Chatbot Message
 router.post('/api/chat', async (req, res) => {
   try {
-    const { messages, message, userContext = {}, deviceId = config.deviceId, groqApiKey, groqModel } = req.body || {};
+    const { messages, message, userContext = {}, deviceId = config.deviceId, groqApiKey, groqModel, clientConfig, systemConfig } = req.body || {};
     const apiKey = req.headers['x-groq-api-key'] || groqApiKey || null;
     const model = req.headers['x-groq-model'] || groqModel || null;
 
@@ -115,7 +115,8 @@ router.post('/api/chat', async (req, res) => {
       userContext,
       deviceId,
       apiKey,
-      model
+      model,
+      clientConfig: clientConfig || systemConfig || null
     });
 
     if (!result.success) {

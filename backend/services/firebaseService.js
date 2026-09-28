@@ -78,11 +78,37 @@ class FirebaseService {
 
   async getProjectMetadata() {
     try {
-      const res = await fetch(this._buildUrl(`/projectMetadata`));
-      if (!res.ok) return config.defaultProjectMetadata;
-      const data = await res.json();
-      return data || config.defaultProjectMetadata;
+      const [metaRes, configRes] = await Promise.all([
+        fetch(this._buildUrl(`/projectMetadata`)),
+        fetch(this._buildUrl(`/system_config`))
+      ]);
+
+      const projectData = metaRes.ok ? await metaRes.json() : null;
+      const sysConfig = configRes.ok ? await configRes.json() : null;
+
+      const merged = {
+        ...config.defaultProjectMetadata,
+        ...(projectData || {})
+      };
+
+      if (sysConfig) {
+        if (sysConfig.project_name) merged.projectName = sysConfig.project_name;
+        if (sysConfig.project_tagline) merged.tagline = sysConfig.project_tagline;
+        if (sysConfig.team_name) merged.teamName = sysConfig.team_name;
+        if (Array.isArray(sysConfig.team_members)) {
+          const visibleNames = sysConfig.team_members
+            .filter(m => m && m.visible !== false)
+            .map(m => typeof m === 'string' ? m : m.name)
+            .filter(Boolean);
+          if (visibleNames.length > 0) {
+            merged.teamMembers = visibleNames;
+          }
+        }
+      }
+
+      return merged;
     } catch (err) {
+      console.warn('[Firebase] Error resolving merged project metadata:', err.message);
       return config.defaultProjectMetadata;
     }
   }

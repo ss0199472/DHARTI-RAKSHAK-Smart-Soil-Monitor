@@ -11,6 +11,44 @@ export class DhartiChatbot {
     this.messages = [];
     this.isProcessing = false;
     this.backendUrl = localStorage.getItem('dharti_backend_url') || 'http://localhost:5000';
+    this.projectName = 'DHARTI RAKSHAK';
+    this.projectTagline = 'Technology for Protecting the Earth';
+    this.teamName = 'Royal Challenger Kanpur';
+    this.teamMembers = [];
+    this.systemConfig = null;
+  }
+
+  setProjectBranding(systemConfig = {}) {
+    if (!systemConfig) return;
+    this.systemConfig = systemConfig;
+    if (systemConfig.project_name) this.projectName = systemConfig.project_name;
+    if (systemConfig.project_tagline) this.projectTagline = systemConfig.project_tagline;
+    if (systemConfig.team_name) this.teamName = systemConfig.team_name;
+    if (Array.isArray(systemConfig.team_members)) {
+      this.teamMembers = systemConfig.team_members
+        .filter(m => m && m.visible !== false)
+        .map(m => typeof m === 'string' ? m : m.name)
+        .filter(Boolean);
+    }
+    this.updateChatHeaderAndChips();
+  }
+
+  updateChatHeaderAndChips() {
+    const headerTitleH4 = document.querySelector('#dharti-chat-window .chat-header-title h4');
+    if (headerTitleH4) {
+      headerTitleH4.innerText = `${this.projectName} AI Assistant`;
+    }
+
+    const toggleSpan = document.querySelector('#dharti-chat-toggle span:not(.chat-toggle-pulse)');
+    if (toggleSpan) {
+      toggleSpan.innerText = `🌱 Ask ${this.projectName} AI`;
+    }
+
+    const teamChip = document.querySelector('.chat-suggestion-pill[data-query*="created"], .chat-suggestion-pill[data-query*="Created"]');
+    if (teamChip) {
+      teamChip.setAttribute('data-query', `Who created ${this.projectName}?`);
+      teamChip.innerText = `👥 Who Created ${this.projectName}?`;
+    }
   }
 
   setBackendUrl(url) {
@@ -26,6 +64,7 @@ export class DhartiChatbot {
   init() {
     this.cacheDom();
     this.attachEvents();
+    this.updateChatHeaderAndChips();
     this.renderInitialMessage();
   }
 
@@ -73,7 +112,7 @@ export class DhartiChatbot {
         if (pill) {
           const query = pill.getAttribute('data-query');
           if (query) {
-            this.sendUserMessage(query);
+            this.sendUserPrompt(query);
           }
         }
       });
@@ -83,18 +122,18 @@ export class DhartiChatbot {
   toggleChat() {
     this.isOpen = !this.isOpen;
     if (this.chatWindow) {
-      if (this.isOpen) {
-        this.chatWindow.classList.add('active');
-        if (this.inputField) this.inputField.focus();
-      } else {
-        this.chatWindow.classList.remove('active');
+      this.chatWindow.classList.toggle('active', this.isOpen);
+      if (this.isOpen && this.inputField) {
+        setTimeout(() => this.inputField.focus(), 150);
       }
     }
   }
 
   closeChat() {
     this.isOpen = false;
-    if (this.chatWindow) this.chatWindow.classList.remove('active');
+    if (this.chatWindow) {
+      this.chatWindow.classList.remove('active');
+    }
   }
 
   resetChat() {
@@ -106,31 +145,24 @@ export class DhartiChatbot {
   }
 
   renderInitialMessage() {
-    const welcomeHtml = `
-      <div class="chat-msg chat-msg-ai">
-        <div class="chat-avatar">🌱</div>
-        <div class="chat-bubble">
-          <p><strong>Namaste! I am Dharti AI</strong> 🌿</p>
-          <p>Your intelligent agronomy & project assistant for <strong>Dharti Rakshak</strong>. I have real-time access to your RS-485 Modbus soil telemetry and project details.</p>
-          <p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 6px;">How can I assist your farm today?</p>
-        </div>
-      </div>
-    `;
-    if (this.messagesContainer) {
-      this.messagesContainer.innerHTML = welcomeHtml;
+    const aiName = `${this.projectName} AI`;
+    const welcomeMsg = `👋 <strong>Namaste! I am ${aiName}.</strong><br>I am your precision agronomy assistant connected to your live soil sensors and hardware. Ask me anything about your <strong>NPK nutrients, pH, moisture, crop suitability</strong>, or project specifications!`;
+    this.appendMessage('ai', welcomeMsg);
+  }
+
+  sendUserPrompt(text) {
+    if (this.inputField) {
+      this.inputField.value = text;
     }
+    this.handleSendMessage();
   }
 
-  handleSendMessage() {
+  async handleSendMessage() {
     if (!this.inputField) return;
-    const text = this.inputField.value.trim();
-    if (!text || this.isProcessing) return;
-    this.inputField.value = '';
-    this.sendUserMessage(text);
-  }
+    const userText = this.inputField.value.trim();
+    if (!userText || this.isProcessing) return;
 
-  async sendUserMessage(userText) {
-    if (this.isProcessing) return;
+    this.inputField.value = '';
     this.isProcessing = true;
 
     // 1. Append user message to UI
@@ -153,7 +185,13 @@ export class DhartiChatbot {
           messages: this.messages,
           deviceId: 'dharti-node-01',
           groqApiKey: this.groqApiKey || undefined,
-          groqModel: this.groqModel || undefined
+          groqModel: this.groqModel || undefined,
+          clientConfig: this.systemConfig || {
+            project_name: this.projectName,
+            project_tagline: this.projectTagline,
+            team_name: this.teamName,
+            team_members: this.teamMembers.map(name => ({ name, visible: true }))
+          }
         })
       });
 

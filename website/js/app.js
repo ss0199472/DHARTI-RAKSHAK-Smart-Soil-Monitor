@@ -58,6 +58,7 @@ class DhartiApp {
     aiEngine.init();
     dhartiChatbot.setBackendUrl(this.systemConfig.backend_url);
     dhartiChatbot.setGroqConfig(this.systemConfig.groq_api_key, this.systemConfig.groq_model);
+    dhartiChatbot.setProjectBranding(this.systemConfig);
     dhartiChatbot.init();
 
     // 3. Attach Event Handlers (Admin + UI + PWA Install)
@@ -227,6 +228,11 @@ class DhartiApp {
         </svg>
         ${projName} Admin Suite
       `;
+    }
+
+    // 6. Update AI Chatbot Branding & Context
+    if (typeof dhartiChatbot !== 'undefined' && dhartiChatbot.setProjectBranding) {
+      dhartiChatbot.setProjectBranding(this.systemConfig);
     }
   }
 

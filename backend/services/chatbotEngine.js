@@ -10,7 +10,7 @@ import { groqService } from './groqService.js';
 import { config } from '../config/config.js';
 
 class ChatbotEngine {
-  async buildSystemPrompt(deviceId = config.deviceId) {
+  async buildSystemPrompt(deviceId = config.deviceId, clientOverrides = {}) {
     // 1. Fetch live telemetry, status, latest AI recommendation, and verified metadata
     const [latestData, statusData, latestRec, projectMeta] = await Promise.all([
       firebaseService.getLatestTelemetry(deviceId),
@@ -21,16 +21,25 @@ class ChatbotEngine {
 
     const isOnline = statusData ? statusData.online !== false : false;
 
-    return `You are "Dharti AI", the intelligent agronomy assistant and project guide for DHARTI RAKSHAK (धर्ती रक्षक - Technology for Protecting the Earth).
+    // Resolve dynamic branding - client overrides > Firebase metadata > default
+    const projectName = clientOverrides.projectName || projectMeta.projectName || 'DHARTI RAKSHAK';
+    const tagline = clientOverrides.tagline || projectMeta.tagline || 'Technology for Protecting the Earth';
+    const teamName = clientOverrides.teamName || projectMeta.teamName || 'Royal Challenger Kanpur';
+    const creator = clientOverrides.creator || projectMeta.creator || 'Namit Kumar';
+    const teamMembersList = Array.isArray(clientOverrides.teamMembers) && clientOverrides.teamMembers.length > 0
+      ? clientOverrides.teamMembers.join(', ')
+      : (Array.isArray(projectMeta.teamMembers) ? projectMeta.teamMembers.join(', ') : 'Namit Kumar, Sanidhya Krishna Yadav, Yugant Dwivedi, Rudransh Uttam');
+
+    return `You are "${projectName} AI", the intelligent agronomy assistant and project guide for ${projectName} (${tagline}).
 
 ====================================================================
 1. VERIFIED PROJECT KNOWLEDGE BASE (STRICT FACTS - NEVER HALLUCINATE)
 ====================================================================
-- Project Name: ${projectMeta.projectName || 'DHARTI RAKSHAK (धर्ती रक्षक)'}
-- Tagline: ${projectMeta.tagline || 'Technology for Protecting the Earth'}
-- Creator: ${projectMeta.creator || 'Namit Kumar'}
-- Team Name: ${projectMeta.teamName || 'Royal Challenger Kanpur'}
-- Team Members: ${Array.isArray(projectMeta.teamMembers) ? projectMeta.teamMembers.join(', ') : 'Namit Kumar, Sanidhya Krishna Yadav, Yugant Dwivedi, Rudransh Uttam'}
+- Project Name: ${projectName}
+- Tagline: ${tagline}
+- Creator: ${creator}
+- Team Name: ${teamName}
+- Active Team Members: ${teamMembersList}
 - Designed & Created By: ${projectMeta.designedBy || 'NK Innovation Hub (https://nk-innovation-hub.netlify.app/)'}
 - Project Objective: ${projectMeta.objective || 'Real-time industrial IoT soil nutrient, moisture, pH, and environmental intelligence platform designed to maximize crop yield, prevent soil degradation, and empower farmers with precision agronomy and AI intelligence.'}
 - Hardware Stack: ${projectMeta.hardwareStack || 'ESP32 Dev Module, Industrial RS-485 Modbus NPK+Moisture+Temp+pH Soil Sensor, MAX485 TTL-to-RS485 transceiver, 16x2 I2C LCD Display'}
@@ -71,15 +80,20 @@ ${latestRec ? `
 ====================================================================
 4. BEHAVIORAL AND SAFETY GUIDELINES
 ====================================================================
-1. Be helpful, concise, friendly, and scientifically grounded.
-2. When answering about project creators or team details, ONLY state the verified names above.
-3. When answering about soil metrics, reference the exact real-time readings shown above.
-4. If asked for exact fertilizer quantities (e.g. kg of urea), explain that exact dosage depends on field area, crop stage, and local soil tests. Provide general application principles and caution.
-5. NEVER disclose internal server secrets, Groq API keys, or private backend environment variables.
-6. Support Hindi (हिन्दी) or English depending on how the user greets or asks you.`;
+1. Your name is "${projectName} AI". Always refer to this project as "${projectName}".
+2. When answering questions regarding the project name, team, or members, you MUST strictly use the active project details:
+   - Project Name: "${projectName}"
+   - Team Name: "${teamName}"
+   - Team Members: ${teamMembersList}
+   Never cite old or different project names or unlisted team members.
+3. Be helpful, concise, friendly, and scientifically grounded.
+4. When answering about soil metrics, reference the exact real-time readings shown above.
+5. If asked for exact fertilizer quantities (e.g. kg of urea), explain that exact dosage depends on field area, crop stage, and local soil tests. Provide general application principles and caution.
+6. NEVER disclose internal server secrets, Groq API keys, or private backend environment variables.
+7. Support Hindi (हिन्दी) or English depending on how the user greets or asks you.`;
   }
 
-  async processChat({ messages, userContext = {}, deviceId = config.deviceId, apiKey = null, model = null }) {
+  async processChat({ messages, userContext = {}, deviceId = config.deviceId, apiKey = null, model = null, clientConfig = null }) {
     const systemConfig = await firebaseService.getSystemConfig();
     const activeApiKey = apiKey || systemConfig?.groq_api_key || config.groqApiKey;
     const activeModel = model || systemConfig?.groq_model || config.groqModel || 'llama-3.3-70b-versatile';
@@ -92,7 +106,22 @@ ${latestRec ? `
     }
 
     try {
-      const systemPrompt = await this.buildSystemPrompt(deviceId);
+      const clientOverrides = {};
+      const srcConfig = clientConfig || systemConfig;
+      if (srcConfig) {
+        if (srcConfig.project_name) clientOverrides.projectName = srcConfig.project_name;
+        if (srcConfig.project_tagline) clientOverrides.tagline = srcConfig.project_tagline;
+        if (srcConfig.team_name) clientOverrides.teamName = srcConfig.team_name;
+        if (Array.isArray(srcConfig.team_members)) {
+          const visible = srcConfig.team_members
+            .filter(m => m && m.visible !== false)
+            .map(m => typeof m === 'string' ? m : m.name)
+            .filter(Boolean);
+          if (visible.length > 0) clientOverrides.teamMembers = visible;
+        }
+      }
+
+      const systemPrompt = await this.buildSystemPrompt(deviceId, clientOverrides);
 
       // Sanitize and prepare conversation history (limit to last 8 turns)
       const sanitizedMessages = [
