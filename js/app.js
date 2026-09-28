@@ -22,6 +22,8 @@ class DhartiApp {
 
     // Default System & Team Configuration
     this.systemConfig = {
+      project_name: "DHARTI RAKSHAK",
+      project_tagline: "Technology for Protecting the Earth • Field Telemetry",
       site_online: true,
       maintenance_msg: "The Dharti Rakshak system is currently undergoing scheduled sensor maintenance & telemetry upgrades. We will be back online shortly.",
       show_team: true,
@@ -58,11 +60,13 @@ class DhartiApp {
     dhartiChatbot.setGroqConfig(this.systemConfig.groq_api_key, this.systemConfig.groq_model);
     dhartiChatbot.init();
 
-    // 3. Attach Event Handlers (Admin + UI)
+    // 3. Attach Event Handlers (Admin + UI + PWA Install)
     this.attachEventListeners();
     this.attachAdminEventListeners();
+    this.setupPwaInstallation();
 
-    // 4. Render Initial Team and System State
+    // 4. Render Initial Project Branding, Team and System State
+    this.applyProjectBranding();
     this.renderTeamSection();
     this.applySitePowerState();
     this.applyAiState();
@@ -165,9 +169,65 @@ class DhartiApp {
     }
 
     // Re-apply to UI
+    this.applyProjectBranding();
     this.renderTeamSection();
     this.applySitePowerState();
     alert("✅ Admin Settings Saved & Synced Successfully!");
+  }
+
+  applyProjectBranding() {
+    const projName = this.systemConfig.project_name || "DHARTI RAKSHAK";
+    const projTagline = this.systemConfig.project_tagline || "Technology for Protecting the Earth • Field Telemetry";
+
+    // 1. Update Document Title
+    document.title = `${projName} — Industrial IoT Smart Soil Monitoring Platform`;
+
+    // 2. Update Header Project Title & Tagline
+    const headerTitleEl = document.getElementById('header-project-name');
+    if (headerTitleEl) {
+      // Format: split words to keep the last word or second part highlighted with .highlight class if multiple words
+      const words = projName.trim().split(/\s+/);
+      if (words.length > 1) {
+        const firstPart = words.slice(0, words.length - 1).join(' ');
+        const lastPart = words[words.length - 1];
+        headerTitleEl.innerHTML = `${firstPart} <span class="highlight">${lastPart}</span> &#127793;`;
+      } else {
+        headerTitleEl.innerHTML = `<span class="highlight">${projName}</span> &#127793;`;
+      }
+    }
+
+    const headerTaglineEl = document.getElementById('header-project-tagline');
+    if (headerTaglineEl) {
+      headerTaglineEl.innerText = projTagline;
+    }
+
+    // 3. Update Footer Project Title & Tagline
+    const footerNameEl = document.getElementById('footer-project-name');
+    if (footerNameEl) {
+      footerNameEl.innerText = projName;
+    }
+    const footerTaglineEl = document.getElementById('footer-project-tagline');
+    if (footerTaglineEl) {
+      footerTaglineEl.innerText = projTagline.split('•')[0].trim();
+    }
+
+    // 4. Update Maintenance Overlay Heading
+    const maintHeadingEl = document.getElementById('maintenance-project-name');
+    if (maintHeadingEl) {
+      maintHeadingEl.innerText = projName;
+    }
+
+    // 5. Update Admin Suite Header Title
+    const adminSuiteTitle = document.querySelector('#admin-dashboard-screen h3');
+    if (adminSuiteTitle) {
+      adminSuiteTitle.innerHTML = `
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        ${projName} Admin Suite
+      `;
+    }
   }
 
   applySitePowerState() {
@@ -227,7 +287,6 @@ class DhartiApp {
   // ==========================================================================
   attachAdminEventListeners() {
     const adminBtn = document.getElementById('btn-admin-modal');
-    const maintAdminBtn = document.getElementById('btn-maintenance-admin');
     const adminModal = document.getElementById('admin-modal');
     const loginClose = document.getElementById('admin-login-close');
     const dashClose = document.getElementById('admin-dash-close');
@@ -458,6 +517,8 @@ class DhartiApp {
     if (saveAllBtn) {
       saveAllBtn.addEventListener('click', () => {
         // Collect current switch states
+        const projectNameInput = document.getElementById('admin-project-name-input');
+        const projectTaglineInput = document.getElementById('admin-project-tagline-input');
         const siteOnlineToggle = document.getElementById('admin-toggle-site-online');
         const showTeamToggle = document.getElementById('admin-toggle-show-team');
         const showTeamNameToggle = document.getElementById('admin-toggle-show-team-name');
@@ -468,6 +529,8 @@ class DhartiApp {
         const groqModelSelectEl = document.getElementById('admin-groq-model-select');
         const aiToggleEl = document.getElementById('admin-toggle-ai-enabled');
 
+        if (projectNameInput) this.systemConfig.project_name = projectNameInput.value.trim() || "DHARTI RAKSHAK";
+        if (projectTaglineInput) this.systemConfig.project_tagline = projectTaglineInput.value.trim() || "Technology for Protecting the Earth • Field Telemetry";
         if (siteOnlineToggle) this.systemConfig.site_online = siteOnlineToggle.checked;
         if (showTeamToggle) this.systemConfig.show_team = showTeamToggle.checked;
         if (showTeamNameToggle) this.systemConfig.show_team_name = showTeamNameToggle.checked;
@@ -518,6 +581,8 @@ class DhartiApp {
     if (dashScreen) dashScreen.style.display = 'block';
 
     // Populate current values
+    const projectNameInput = document.getElementById('admin-project-name-input');
+    const projectTaglineInput = document.getElementById('admin-project-tagline-input');
     const siteOnlineToggle = document.getElementById('admin-toggle-site-online');
     const showTeamToggle = document.getElementById('admin-toggle-show-team');
     const showTeamNameToggle = document.getElementById('admin-toggle-show-team-name');
@@ -528,6 +593,8 @@ class DhartiApp {
     const groqKeyInput = document.getElementById('admin-groq-api-key-input');
     const groqModelSelect = document.getElementById('admin-groq-model-select');
 
+    if (projectNameInput) projectNameInput.value = this.systemConfig.project_name || "DHARTI RAKSHAK";
+    if (projectTaglineInput) projectTaglineInput.value = this.systemConfig.project_tagline || "Technology for Protecting the Earth • Field Telemetry";
     if (siteOnlineToggle) siteOnlineToggle.checked = (this.systemConfig.site_online !== false);
     if (showTeamToggle) showTeamToggle.checked = (this.systemConfig.show_team !== false);
     if (showTeamNameToggle) showTeamNameToggle.checked = (this.systemConfig.show_team_name !== false);
@@ -693,6 +760,67 @@ class DhartiApp {
     if (modalClose && modalBackdrop) {
       modalClose.addEventListener('click', () => modalBackdrop.classList.remove('open'));
     }
+  }
+
+  // ==========================================================================
+  // PROGRESSIVE WEB APP (PWA) INSTALLATION & SERVICE WORKER
+  // ==========================================================================
+  setupPwaInstallation() {
+    // 1. Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => {
+            console.log('[PWA] Service Worker registered successfully with scope:', reg.scope);
+          })
+          .catch((err) => {
+            console.warn('[PWA] Service Worker registration failed:', err);
+          });
+      });
+    }
+
+    // 2. Capture 'beforeinstallprompt' to trigger Chrome / Android / Windows install prompt
+    const installBtn = document.getElementById('btn-install-pwa');
+    let deferredPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent automatic mini-infobar on mobile
+      e.preventDefault();
+      deferredPrompt = e;
+      console.log('[PWA] beforeinstallprompt event captured.');
+
+      // Reveal the Install App button in header
+      if (installBtn) {
+        installBtn.style.display = 'inline-flex';
+      }
+    });
+
+    if (installBtn) {
+      installBtn.addEventListener('click', async () => {
+        if (!deferredPrompt) {
+          alert('📱 To install Dharti Rakshak:\n\n• On Chrome Desktop: Click the Install icon (computer screen with down arrow) on the right side of the address bar.\n• On Android: Tap the 3 dots (menu) in Chrome and select "Install app" or "Add to Home screen".');
+          return;
+        }
+
+        // Show the native browser install dialog
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`[PWA] User response to install prompt: ${outcome}`);
+
+        if (outcome === 'accepted') {
+          installBtn.style.display = 'none';
+        }
+        deferredPrompt = null;
+      });
+    }
+
+    // 3. Listen for app installed event
+    window.addEventListener('appinstalled', () => {
+      console.log('[PWA] Dharti Rakshak was successfully installed on device!');
+      if (installBtn) {
+        installBtn.style.display = 'none';
+      }
+    });
   }
 
   updateHeroDiagnostics(data) {

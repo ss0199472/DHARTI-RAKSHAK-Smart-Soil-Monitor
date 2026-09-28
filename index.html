@@ -11,6 +11,16 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
+  <!-- PWA & Mobile Web App Meta Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#064e3b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Dharti Rakshak">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -34,12 +44,21 @@
           </svg>
         </div>
         <div class="brand-title-group">
-          <h1>DHARTI <span class="highlight">RAKSHAK</span> &#127793;</h1>
-          <p>Technology for Protecting the Earth &bull; Field Telemetry</p>
+          <h1 id="header-project-name">DHARTI <span class="highlight">RAKSHAK</span> &#127793;</h1>
+          <p id="header-project-tagline">Technology for Protecting the Earth &bull; Field Telemetry</p>
         </div>
       </div>
 
       <div class="header-controls">
+        <button class="btn-header" id="btn-install-pwa" title="Install as Desktop/Mobile App" style="display: none; background: rgba(52, 211, 153, 0.15); border-color: var(--primary-mint); color: var(--primary-mint); font-weight: 700;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Install App 📲
+        </button>
+
         <div class="status-pill" id="system-status-pill">
           <span class="status-pulse"></span>
           <span id="system-status-text">Node Offline</span>
@@ -497,7 +516,7 @@
          ==================================================================== -->
     <footer class="footer-bar" id="footer-section">
       <div>
-        <strong>DHARTI RAKSHAK</strong> &bull; Technology for Protecting the Earth
+        <strong id="footer-project-name">DHARTI RAKSHAK</strong> &bull; <span id="footer-project-tagline">Technology for Protecting the Earth</span>
       </div>
       <div id="team-attribution-container">
         <div style="margin-top: 6px; color: var(--text-dim);" id="team-title-heading">
@@ -533,7 +552,7 @@
   <div class="maintenance-overlay" id="maintenance-overlay">
     <div class="maintenance-card">
       <div style="font-size: 3.2rem; margin-bottom: 12px; filter: drop-shadow(0 0 16px rgba(52, 211, 153, 0.4));">🌿</div>
-      <h2 style="font-family: var(--font-display); font-size: 2rem; color: var(--primary-mint); margin-bottom: 8px;">
+      <h2 id="maintenance-project-name" style="font-family: var(--font-display); font-size: 2rem; color: var(--primary-mint); margin-bottom: 8px;">
         DHARTI RAKSHAK
       </h2>
       <p style="font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 20px;">
@@ -623,7 +642,34 @@
           <button class="modal-close-trigger" id="admin-dash-close" style="background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1.5rem;">&times;</button>
         </div>
 
-        <!-- 1. Master Website Power Switch -->
+        <!-- 1. Project Branding & Name Configuration -->
+        <div class="admin-section-block">
+          <div class="admin-section-header">
+            <div class="admin-section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"/>
+                <path d="M7 14.5c2.5-1 4.5-3 5-6.5 1.5 2 3.5 3.5 5 4"/>
+                <path d="M12 8v12"/>
+              </svg>
+              Project Name & Branding
+            </div>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 12px;">
+            Customize the platform's project name, header branding, and tagline directly across the entire website.
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+            <div>
+              <label style="display: block; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px; font-weight: 700;">Project Name (e.g. DHARTI RAKSHAK)</label>
+              <input type="text" id="admin-project-name-input" class="admin-input-text" value="DHARTI RAKSHAK" placeholder="Enter Project Name">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px; font-weight: 700;">Project Tagline / Subtitle</label>
+              <input type="text" id="admin-project-tagline-input" class="admin-input-text" value="Technology for Protecting the Earth • Field Telemetry" placeholder="Enter Project Tagline">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Master Website Power Switch -->
         <div class="admin-section-block">
           <div class="admin-section-header">
             <div class="admin-section-title">

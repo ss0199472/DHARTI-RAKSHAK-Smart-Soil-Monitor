@@ -1,0 +1,31 @@
+{
+  "name": "Dharti Rakshak — Smart Soil Monitoring",
+  "short_name": "Dharti Rakshak",
+  "description": "Industrial IoT Modbus RS-485 Soil Nutrient, Moisture, pH, and AI Agronomy Intelligence Platform",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#070d18",
+  "theme_color": "#064e3b",
+  "categories": ["utilities", "productivity", "agriculture"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
