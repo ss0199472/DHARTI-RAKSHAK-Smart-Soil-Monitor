@@ -8,7 +8,7 @@
 
 ## 🌟 Overview
 
-**Dharti Rakshak** is an industrial-grade end-to-end IoT, Cloud, and AI-driven precision agriculture platform. It captures real-time soil chemistry via an industrial 7-in-1 Modbus RS-485 probe, streams live telemetry over HTTPS to Firebase Realtime Database, powers an intelligent Groq Cloud AI recommendation engine, and delivers insights across both a **Progressive Web App (PWA)** and a dedicated **Flutter Android Application**.
+**Dharti Rakshak** is an industrial-grade end-to-end IoT, Cloud, and AI-driven precision agriculture platform. It captures real-time soil chemistry via an industrial 7-in-1 Modbus RS-485 probe, streams live telemetry over HTTPS to Firebase Realtime Database, powers an intelligent Groq Cloud AI recommendation engine, and delivers insights across a high-performance **Progressive Web App (PWA)** that can be installed directly on Android, Windows, and macOS devices.
 
 ```
 [ Industrial 7-in-1 Sensor ]
@@ -20,10 +20,7 @@
 [ Firebase Realtime Database ]
        │                │
        ▼                ▼
-[ Web Dashboard & PWA ]   [ Render AI Backend ] ◄──► [ Groq Cloud AI (Llama 3.3) ]
-       ▲
-       │ (Direct Cloud Sync)
-[ Flutter Android App ]
+[ Web Dashboard & Installable PWA App ]   [ Render AI Backend ] ◄──► [ Groq Cloud AI (Llama 3.3) ]
 ```
 
 ---
@@ -37,8 +34,9 @@
 - **Dual Display Telemetry**: Live rotating mirrors on an on-site 16x2 I2C LCD screen and real-time cloud upload.
 
 ### 2. 📱 Progressive Web App (PWA Web App)
-- **Installable Native App**: Installable directly on **Windows**, **Mac**, and **Android** Chrome/Edge with an "Install App 📲" button and browser address bar prompt.
-- **Offline Shell & Fast Caching**: Powered by a Service Worker (`sw.js`) and Web App Manifest (`manifest.json`).
+- **Installable Cross-Platform App**: Installable as a standalone app on **Android phones**, **Windows PC**, and **Mac** via Google Chrome / Microsoft Edge with a dedicated "Install App 📲" button and browser address bar prompt.
+- **Auto-Sync & Live Telemetry**: Live telemetry auto-updates directly from the cloud without requiring page reloads.
+- **Offline Shell & Fast Caching**: Powered by an advanced Service Worker (`sw.js`) and Web App Manifest (`manifest.json`).
 - **Dynamic Project Rebranding**: Change the Project Name (e.g. from *Dharti Rakshak* to any custom title) and Tagline live directly from the Admin Panel without modifying code.
 - **Full Admin Control Suite**:
   - Live Website Power Switch (Public Live vs. Scheduled Maintenance Mode).
@@ -47,18 +45,13 @@
   - Backend URL & Groq Model Discovery Switcher.
 - **Interactive 16x2 LCD Mirror**: Emulates the field LCD rotation in real time on the web dashboard.
 - **Historical Analysis & Export**: 20-entry real-time historical log table with search filters and one-click CSV export.
+- **Bilingual Interface**: Full English and Hindi support for Indian farmers.
 
 ### 3. 🤖 Agronomy AI Backend Service (`/backend`)
 - **Engine**: Node.js, Express, Helmet, Rate-Limiting, CORS.
 - **Groq Cloud AI**: Leverages `llama-3.3-70b-versatile` for deep agronomy reasoning and real-time chat assistance.
 - **Context-Aware Chatbot**: Answers queries by evaluating current sensor frames against regional crop suitability matrices (Wheat, Rice, Maize, Mustard).
 - **Deployment-Ready**: Ready for free 1-click deployment on [Render.com](https://render.com) via `render.yaml`.
-
-### 4. 📲 Flutter Android App (`KrishiDrishti-main (3).zip`)
-- **Direct Cloud Integration**: Connects straight to the Firebase Realtime Database (`/devices/dharti-node-01/`).
-- **Zero Mock / Zero Bluetooth**: Removed all simulated Bluetooth pairings and fake random number generators; displays real-time telemetry.
-- **Auto Offline Detection**: Automatically detects probe disconnect or node shutdown if no heartbeat is received within 12 seconds.
-- **Bilingual Interface**: Full English and Hindi support for Indian farmers.
 
 ---
 
