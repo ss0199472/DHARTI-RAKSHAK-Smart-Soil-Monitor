@@ -1,14 +1,16 @@
-# 🌿 DHARTI RAKSHAK (धर्ती रक्षक) — Smart Soil Monitoring & Agronomy AI
+# 🌿 DHARTI RAKSHAK / KrishiDrishti — Smart Soil Monitoring & Agronomy AI
 
-> **"Technology for Protecting the Earth"**  
-> Developed by **Team Royal Challenger Kanpur** (Namit Kumar, Sanidhya Krishna Yadav, Yugant Dwivedi, Rudransh Uttam)  
+> **"Technology for Protecting the Earth • Field Telemetry"**  
+> Developed by **Team Royal Challenger Kanpur**  
 > Designed & Powered by **NK Innovation Hub**
 
 ---
 
 ## 🌟 Overview
 
-**Dharti Rakshak** is an industrial-grade end-to-end IoT, Cloud, and AI-driven precision agriculture platform. It captures real-time soil chemistry via an industrial 7-in-1 Modbus RS-485 probe, streams live telemetry over HTTPS to Firebase Realtime Database, powers an intelligent Groq Cloud AI recommendation engine, and delivers insights across a high-performance **Progressive Web App (PWA)** that can be installed directly on Android, Windows, and macOS devices.
+**Dharti Rakshak (KrishiDrishti)** is an industrial-grade end-to-end IoT, Cloud, and AI-driven precision agriculture platform. It captures real-time soil chemistry via an industrial 7-in-1 Modbus RS-485 probe, streams live telemetry over HTTPS to Firebase Realtime Database, powers an intelligent Groq Cloud AI recommendation engine, and delivers insights across a high-performance **Progressive Web App (PWA)** that can be installed directly on Android, Windows, and macOS devices.
+
+The platform includes a **Dynamic Admin Control Suite** allowing administrators to rebrand the project name (e.g. *DHARTI RAKSHAK* or *KrishiDrishti*), customize taglines, manage active team members, control public maintenance mode, and have all changes automatically propagate in real time across the web dashboard, the PWA interface, and the **AI Chatbot**.
 
 ```
 [ Industrial 7-in-1 Sensor ]
@@ -37,20 +39,23 @@
 - **Installable Cross-Platform App**: Installable as a standalone app on **Android phones**, **Windows PC**, and **Mac** via Google Chrome / Microsoft Edge with a dedicated "Install App 📲" button and browser address bar prompt.
 - **Auto-Sync & Live Telemetry**: Live telemetry auto-updates directly from the cloud without requiring page reloads.
 - **Offline Shell & Fast Caching**: Powered by an advanced Service Worker (`sw.js`) and Web App Manifest (`manifest.json`).
-- **Dynamic Project Rebranding**: Change the Project Name (e.g. from *Dharti Rakshak* to any custom title) and Tagline live directly from the Admin Panel without modifying code.
-- **Full Admin Control Suite**:
+- **Dynamic Project Rebranding & Admin Suite**:
+  - Live Project Name & Tagline customization (e.g., *KrishiDrishti*, *DHARTI RAKSHAK*) directly from the Admin Panel.
   - Live Website Power Switch (Public Live vs. Scheduled Maintenance Mode).
-  - Dynamic Team Recognition & Member Visibility Editor.
+  - Dynamic Team Recognition & Member Visibility Editor (add, remove, or toggle member visibility).
   - Custom Admin Passcode (PIN) stored securely in the cloud.
   - Backend URL & Groq Model Discovery Switcher.
 - **Interactive 16x2 LCD Mirror**: Emulates the field LCD rotation in real time on the web dashboard.
 - **Historical Analysis & Export**: 20-entry real-time historical log table with search filters and one-click CSV export.
 - **Bilingual Interface**: Full English and Hindi support for Indian farmers.
 
-### 3. 🤖 Agronomy AI Backend Service (`/backend`)
+### 3. 🤖 Agronomy AI Backend Service & Smart Chatbot (`/backend`)
 - **Engine**: Node.js, Express, Helmet, Rate-Limiting, CORS.
 - **Groq Cloud AI**: Leverages `llama-3.3-70b-versatile` for deep agronomy reasoning and real-time chat assistance.
-- **Context-Aware Chatbot**: Answers queries by evaluating current sensor frames against regional crop suitability matrices (Wheat, Rice, Maize, Mustard).
+- **Context-Aware Dynamic Chatbot**: 
+  - Dynamically adopts the active project persona (e.g., introduces itself as *KrishiDrishti AI* or *Dharti AI*).
+  - Strictly cites active team members and team name configured in the Admin Panel.
+  - Evaluates live soil sensor telemetry (NPK, pH, Moisture, Temp) in real time to provide tailored agronomic and crop advice.
 - **Deployment-Ready**: Ready for free 1-click deployment on [Render.com](https://render.com) via `render.yaml`.
 
 ---
@@ -126,6 +131,7 @@ Open `http://localhost:8080` in your browser.
 ## 👥 Credits & Team
 
 - **Project Lead & Developer**: Namit Kumar
-- **Core Team Members**: Sanidhya Krishna Yadav, Yugant Dwivedi, Rudransh Uttam
+- **Development Team**: Royal Challenger Kanpur (Sanidhya Krishna Yadav, Yugant Dwivedi, Rudransh Uttam)
+- **Dynamic Field Recognition**: Hammad Uddin, Yuvaraj Singh (configurable live via Admin Panel)
 - **Organization**: Team Royal Challenger Kanpur
 - **Innovation Partner**: [NK Innovation Hub](https://nk-innovation-hub.netlify.app/)

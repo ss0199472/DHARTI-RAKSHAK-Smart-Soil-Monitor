@@ -102,15 +102,24 @@ Analyzes current soil telemetry with Groq AI, computes health index, structures 
 ```
 
 ### `POST /api/chat`
-Sends a message to Dharti AI with real-time soil context and verified project metadata.
+Sends a message to the AI Chatbot with real-time soil context and dynamic Admin Panel metadata (Project Name, Team Name, and Active Team Members).
 ```json
 {
   "message": "What does my NPK reading mean for wheat?",
   "messages": [
     { "role": "user", "content": "What is my soil moisture?" }
-  ]
+  ],
+  "clientConfig": {
+    "project_name": "KrishiDrishti",
+    "project_tagline": "Technology for Protecting the Earth • Field Telemetry",
+    "team_name": "Royal Challenger Kanpur",
+    "team_members": [
+      { "name": "Hammad Uddin", "visible": true },
+      { "name": "Yuvaraj Singh", "visible": true }
+    ]
+  }
 }
 ```
 
 ### `GET /api/project-info`
-Retrieves verified project metadata (*Royal Challenger Kanpur, Namit Kumar, NK Innovation Hub*).
+Retrieves verified project metadata merged with live `/system_config` from Firebase Realtime Database.
